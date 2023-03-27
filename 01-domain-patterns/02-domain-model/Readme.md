@@ -1,0 +1,1 @@
+The domain model is a set of classes, and each one of them is responsible to solve or represent something of business you working on
