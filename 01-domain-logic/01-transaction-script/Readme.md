@@ -1,0 +1,1 @@
+The idea of transaction scripts is a class to do an operation in an procedure calling databases stuffs. Usually, each script is responsible for one thing
