@@ -5,4 +5,8 @@ export class Person {
     private lastName: string,
     private numberOfDependents: number
   ) {}
+
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
 }
