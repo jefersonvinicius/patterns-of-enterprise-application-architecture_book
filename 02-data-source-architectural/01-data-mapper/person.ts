@@ -1,9 +1,9 @@
 export class Person {
   constructor(
-    private id: number,
-    private firstName: string,
-    private lastName: string,
-    private numberOfDependents: number
+    public id: number,
+    public firstName: string,
+    public lastName: string,
+    public numberOfDependents: number
   ) {}
 
   get fullName() {

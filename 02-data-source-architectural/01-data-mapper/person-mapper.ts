@@ -1,6 +1,11 @@
 import { getDb } from './db';
 import { Person } from './person';
 
+interface StatementSource {
+  sql(): string;
+  parameters(): any[];
+}
+
 abstract class AbstractMapper {
   protected loadedMap = new Map<number, any>();
   protected abstract findStatement: string;
@@ -26,6 +31,11 @@ abstract class AbstractMapper {
     return resultSet.map((row) => this.load<T>(row));
   }
 
+  async findMany(source: StatementSource) {
+    const resultSet = await getDb().all(source.sql(), source.parameters());
+    return this.loadAll(resultSet);
+  }
+
   protected abstract doLoad<T>(id: number, resultSet: any): T;
 }
 
@@ -43,11 +53,27 @@ export class PersonMapper extends AbstractMapper {
     return this.loadAll<Person>(resultSet);
   }
 
+  findByLastName2(name: string) {
+    return this.findMany(new PersonMapper.FindByLastName(name));
+  }
+
+  private static FindByLastName = class implements StatementSource {
+    constructor(readonly lastName: string) {}
+    sql = () => `SELECT ${PersonMapper.COLUMNS} FROM people WHERE UPPER(last_name) LIKE UPPER(?) ORDER BY last_name`;
+    parameters = () => [this.lastName];
+  };
+
   protected override doLoad<Person>(id: number, resultSet: any): Person {
     const firstName = resultSet.first_name;
     const lastName = resultSet.last_name;
     const numberOfDependents = resultSet.number_of_dependents;
     const person = new Person(id, firstName, lastName, numberOfDependents);
     return person as Person;
+  }
+
+  private updateStatement = `UPDATE people SET last_name = ?, first_name = ?, number_of_dependents = ? WHERE id = ?`;
+
+  async update(person: Person) {
+    await getDb().run(this.updateStatement, person.lastName, person.firstName, person.numberOfDependents, person.id);
   }
 }
