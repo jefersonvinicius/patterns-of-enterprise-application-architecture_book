@@ -1,5 +1,7 @@
+import { Statement } from 'sqlite';
 import { getDb } from './db';
 import { Person } from './person';
+import { DomainObject } from './domain';
 
 interface StatementSource {
   sql(): string;
@@ -37,6 +39,19 @@ abstract class AbstractMapper {
   }
 
   protected abstract doLoad<T>(id: number, resultSet: any): T;
+
+  protected abstract insertStatement: string;
+
+  async insert<T extends DomainObject>(domainObject: T) {
+    const stmt = await getDb().prepare(this.insertStatement);
+    await this.doInsert(domainObject, stmt);
+    const result = await stmt.run();
+    if (result.lastID) domainObject.id = result.lastID;
+    this.loadedMap.set(domainObject.id, domainObject);
+    return domainObject;
+  }
+
+  abstract doInsert(subject: DomainObject, statement: Statement): Promise<void>;
 }
 
 export class PersonMapper extends AbstractMapper {
@@ -75,5 +90,12 @@ export class PersonMapper extends AbstractMapper {
 
   async update(person: Person) {
     await getDb().run(this.updateStatement, person.lastName, person.firstName, person.numberOfDependents, person.id);
+  }
+
+  override insertStatement = 'INSERT INTO people (first_name, last_name, number_of_dependents) VALUES (?, ?, ?)';
+
+  async doInsert(subject: DomainObject, statement: Statement): Promise<void> {
+    const person = subject as Person;
+    statement.bind(person.firstName, person.lastName, person.numberOfDependents);
   }
 }

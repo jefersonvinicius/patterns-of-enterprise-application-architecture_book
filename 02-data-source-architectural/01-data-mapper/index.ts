@@ -1,4 +1,5 @@
 import { startDb } from './db';
+import { Person } from './person';
 import { PersonMapper } from './person-mapper';
 
 async function main() {
@@ -21,6 +22,11 @@ async function main() {
   personFound!.firstName = 'Mudou';
   await personMapper.update(personFound!);
   console.log({ updated: await personMapper.find(1) });
+
+  console.log('---- insert');
+  const newPerson = new Person(Person.NO_ID, 'Novo', 'Silva', 3);
+  await personMapper.insert(newPerson);
+  console.log({ inserted: await personMapper.find(newPerson.id) });
 }
 
 main();
