@@ -1,6 +1,5 @@
 import { startDb } from './db';
-import { Person } from './person';
-import { PersonMapper } from './person-mapper';
+import { Person, PersonMapper } from './person';
 
 async function main() {
   await startDb();
