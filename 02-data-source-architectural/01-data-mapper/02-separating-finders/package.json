@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@types/node": "^18.15.11",
+    "sqlite": "^4.1.2",
+    "sqlite3": "^5.1.6",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2"
+  }
+}
