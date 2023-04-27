@@ -1,31 +1,43 @@
+import { before, describe, it } from 'node:test';
 import { startDb } from './db';
 import { Person, PersonMapper } from './person';
+import assert from 'node:assert';
 
-async function main() {
-  await startDb();
-  console.log('---- find');
-  const personMapper = new PersonMapper();
-  const person = await personMapper.find(1);
-  console.log(person);
+describe('PersonMapper', async () => {
+  let sut: PersonMapper;
 
-  console.log('---- findByLastName');
-  const people = await personMapper.findByLastName('Santos');
-  console.log({ people });
+  before(async () => {
+    await startDb().catch(console.error);
+    sut = new PersonMapper();
+  });
 
-  console.log('---- findByLastName2');
-  const people2 = await personMapper.findByLastName2('Santos');
-  console.log({ people2 });
+  it('should find person', async () => {
+    const person = await sut.find(1);
+    const expected = new Person(1, 'Jeferson', 'Santos', 6);
+    assert.deepStrictEqual(person, expected);
+  });
 
-  console.log('---- update');
-  const personFound = await personMapper.find(1);
-  personFound!.firstName = 'Mudou';
-  await personMapper.update(personFound!);
-  console.log({ updated: await personMapper.find(1) });
+  it('should find people by last name', async () => {
+    const people = await sut.findByLastName('Santos');
+    assert.strictEqual(people.length, 2);
+    assert.deepStrictEqual(
+      people.map((p) => p.lastName),
+      ['Santos', 'Santos']
+    );
+  });
 
-  console.log('---- insert');
-  const newPerson = new Person(Person.NO_ID, 'Novo', 'Silva', 3);
-  await personMapper.insert(newPerson);
-  console.log({ inserted: await personMapper.find(newPerson.id) });
-}
+  it('should update person', async () => {
+    const personFound = await sut.find(1);
+    personFound!.firstName = 'Mudou';
+    personFound!.numberOfDependents = 3;
+    await sut.update(personFound!);
+    const expected = new Person(1, 'Mudou', 'Santos', 3);
+    assert.deepStrictEqual(await sut.find(1), expected);
+  });
 
-main();
+  it('should insert person', async () => {
+    const newPerson = new Person(Person.NO_ID, 'Novo', 'Silva', 3);
+    await sut.insert(newPerson);
+    assert.deepStrictEqual(await sut.find(newPerson.id), newPerson);
+  });
+});
