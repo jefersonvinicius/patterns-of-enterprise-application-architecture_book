@@ -1,7 +1,9 @@
+import { Product, ProductType } from './product';
+import { RevenueRecognition } from './revenue-recognition';
 import { TableModule } from './table-module';
 import { addDays } from 'date-fns';
 
-type ContractRow = {
+export type ContractRow = {
   id: number;
   amount: number;
   productId: number;
@@ -14,7 +16,7 @@ export class Contract extends TableModule<ContractRow> {
   }
 
   getRowData(id: number) {
-    return this.table.find((row) => row.id === id);
+    return this.table.rows.find((row) => row.id === id);
   }
 
   calculateRecognitions(contractID: number) {
@@ -27,8 +29,15 @@ export class Contract extends TableModule<ContractRow> {
       rr.insert(contractID, amount, this.getWhenSigned(contractID)!);
     } else if (product.getProductType(productId) === ProductType.SS) {
       const results = this.allocate(amount, 3);
-      rr.insert(contractID, results[0]);
-    }
+      rr.insert(contractID, results[0], this.getWhenSigned(contractID)!);
+      rr.insert(contractID, results[1], addDays(this.getWhenSigned(contractID)!, 60));
+      rr.insert(contractID, results[2], addDays(this.getWhenSigned(contractID)!, 90));
+    } else if (product.getProductType(productId) === ProductType.DB) {
+      const results = this.allocate(amount, 3);
+      rr.insert(contractID, results[0], this.getWhenSigned(contractID)!);
+      rr.insert(contractID, results[1], addDays(this.getWhenSigned(contractID)!, 30));
+      rr.insert(contractID, results[2], addDays(this.getWhenSigned(contractID)!, 60));
+    } else throw Error('Invalid product type');
   }
 
   private allocate(amount: number, by: number): number[] {
@@ -47,34 +56,5 @@ export class Contract extends TableModule<ContractRow> {
 
   getProductId(contractId: number) {
     return this.getRowData(contractId)?.productId;
-  }
-}
-
-class RevenueRecognition extends TableModule {
-  constructor(dataSet: any) {
-    super(dataSet, 'revenue_recognitions');
-  }
-
-  insert(contractId: number, amount: number, whenSigned: Date) {}
-}
-
-enum ProductType {
-  WP = 'word',
-  SS = 'spreadsheet',
-}
-
-type ProductRow = { id: number; type: ProductType };
-
-class Product extends TableModule<ProductRow> {
-  constructor(dataSet: any) {
-    super(dataSet, 'products');
-  }
-
-  getRowData(id: number) {
-    return this.table.find((row) => row.id === id);
-  }
-
-  getProductType(productId: number) {
-    return this.getRowData(productId)?.type;
   }
 }
