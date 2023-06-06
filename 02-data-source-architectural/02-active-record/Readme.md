@@ -1,0 +1,1 @@
+Active Record combines data persistence and domain logic in the same class.

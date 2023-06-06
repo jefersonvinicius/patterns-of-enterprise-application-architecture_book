@@ -1,7 +1,14 @@
 {
+  "scripts": {
+    "start": "tsx index.ts"
+  },
   "devDependencies": {
     "@types/node": "^20.2.3",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "sqlite": "^4.2.1",
+    "sqlite3": "^5.1.6"
   }
 }
