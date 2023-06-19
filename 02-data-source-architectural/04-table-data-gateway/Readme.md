@@ -1,1 +1,1 @@
-The Row Data Gateway is a representation of a row in a database. The difference from the Active Record pattern is that the Row Data Gateway does not contain domain logic; it only handles data access logic.
+The Table Data Gateway is a representation of a table
