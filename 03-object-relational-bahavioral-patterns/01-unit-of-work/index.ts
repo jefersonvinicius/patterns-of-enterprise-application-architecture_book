@@ -1,8 +1,12 @@
 import assert from 'node:assert';
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 import database from './database';
 
 abstract class Entity {
+  static get NOID() {
+    return -1;
+  }
+
   constructor(public id: number) {}
 }
 
@@ -32,20 +36,67 @@ class PersonMapper implements Mapper<Person> {
     return entity;
   }
 
-  delete(entity: Entity): Promise<void> {
-    throw new Error('Method not implemented.');
+  async delete(entity: Person): Promise<void> {
+    const sql = `DELETE FROM people WHERE id = ?`;
+    await database.instance().run(sql, entity.id);
   }
 
-  update(entity: Entity): Promise<void> {
-    throw new Error('Method not implemented.');
+  async update(entity: Person): Promise<void> {
+    const sql = `UPDATE people SET name = ? WHERE id = ?`;
+    await database.instance().run(sql, entity.name, entity.id);
   }
 
-  private async getRow(id: number) {
-    const sql = `SELECT * FROM people WHERE id = ?`;
-    const row = await database.instance().get(sql, id);
-    return row;
+  async all() {
+    const sql = `SELECT * FROM people`;
+    const rows = await database.instance().all(sql);
+    return rows.map((row) => new Person(row.id, row.name));
   }
 }
+
+class ProductMapper implements Mapper<Product> {
+  async insert(entity: Product): Promise<Product> {
+    const sql = `INSERT INTO products (name, price) VALUES (?, ?)`;
+    const result = await database.instance().run(sql, entity.name, entity.price);
+    entity.id = result.lastID!;
+    return entity;
+  }
+
+  async delete(entity: Product): Promise<void> {
+    const sql = `DELETE FROM products WHERE id = ?`;
+    await database.instance().run(sql, entity.id);
+  }
+
+  async update(entity: Product): Promise<void> {
+    const sql = `UPDATE products SET name = ?, price = ? WHERE id = ?`;
+    await database.instance().run(sql, entity.name, entity.price, entity.id);
+  }
+
+  async all() {
+    const sql = `SELECT * FROM products`;
+    const rows = await database.instance().all(sql);
+    return rows.map((row) => new Product(row.id, row.name, row.price));
+  }
+}
+
+const personMapper = new PersonMapper();
+const productMapper = new ProductMapper();
+
+class MapperRegistry {
+  private static mappers = new Map<string, Mapper<Entity>>();
+
+  static add(entityClass: new (...args: any[]) => Entity, mapper: Mapper<Entity>) {
+    this.mappers.set(entityClass.name, mapper);
+  }
+
+  static getMapper(entity: Entity) {
+    const result = this.mappers.get(entity.constructor.name);
+    if (!result) throw Error(`Mapper for entity ${entity.constructor.name} not found`);
+    return result;
+  }
+}
+
+MapperRegistry.add(Person, personMapper);
+MapperRegistry.add(Product, productMapper);
 
 class UnitOfWork {
   private _news: Entity[] = [];
@@ -80,6 +131,18 @@ class UnitOfWork {
 
   registerClean(entity: Entity) {
     if (!entity.id) throw new Error('Entity id is not defined');
+  }
+
+  async commit() {
+    for await (const entity of this.news) {
+      await MapperRegistry.getMapper(entity).insert(entity);
+    }
+    for await (const entity of this.dirty) {
+      await MapperRegistry.getMapper(entity).update(entity);
+    }
+    for await (const entity of this.removed) {
+      await MapperRegistry.getMapper(entity).delete(entity);
+    }
   }
 
   get news() {
@@ -269,4 +332,55 @@ describe('UnitOfWork', () => {
       );
     });
   });
+
+  describe('commit', () => {
+    before(async () => {
+      await database.start();
+    });
+
+    it('should commit news', async () => {
+      const unitOfWork = new UnitOfWork();
+      unitOfWork.registerNew(new Product(Product.NOID, 'XBox One', 2000));
+      unitOfWork.registerNew(new Product(Product.NOID, 'Cadeira XPTO', 560));
+      unitOfWork.registerNew(new Product(Product.NOID, 'Notebook Positivo', 300));
+      unitOfWork.registerNew(new Person(Person.NOID, 'Jeferson'));
+      unitOfWork.registerNew(new Person(Product.NOID, 'Mu Nuin'));
+      await unitOfWork.commit();
+      assert.deepStrictEqual(await productMapper.all(), [
+        new Product(1, 'XBox One', 2000),
+        new Product(2, 'Cadeira XPTO', 560),
+        new Product(3, 'Notebook Positivo', 300),
+      ]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(1, 'Jeferson'), new Person(2, 'Mu Nuin')]);
+    });
+
+    it('should commit dirty', async () => {
+      const unitOfWork = new UnitOfWork();
+      unitOfWork.registerDirty(new Product(1, 'XBox One Max', 2500));
+      unitOfWork.registerDirty(new Product(2, 'Cadeira XPTO', 460));
+      unitOfWork.registerDirty(new Person(1, 'Jeferson'));
+      unitOfWork.registerDirty(new Person(2, 'Mu Nuin Jas'));
+      await unitOfWork.commit();
+      assert.deepStrictEqual(await productMapper.all(), [
+        new Product(1, 'XBox One Max', 2500),
+        new Product(2, 'Cadeira XPTO', 460),
+        new Product(3, 'Notebook Positivo', 300),
+      ]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(1, 'Jeferson'), new Person(2, 'Mu Nuin Jas')]);
+    });
+
+    it('should commit removed', async () => {
+      const unitOfWork = new UnitOfWork();
+      unitOfWork.registerRemoved(new Product(3, 'Notebook Positivo', 460));
+      unitOfWork.registerRemoved(new Person(2, 'Mu Nuin Jas'));
+      await unitOfWork.commit();
+      assert.deepStrictEqual(await productMapper.all(), [
+        new Product(1, 'XBox One Max', 2500),
+        new Product(2, 'Cadeira XPTO', 460),
+      ]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(1, 'Jeferson')]);
+    });
+  });
+
+  it.todo('should commit with different operations');
 });
