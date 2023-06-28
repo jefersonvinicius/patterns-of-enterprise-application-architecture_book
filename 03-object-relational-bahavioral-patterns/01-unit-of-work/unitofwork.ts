@@ -37,6 +37,7 @@ export class UnitOfWork {
   }
 
   async commit() {
+    console.log(this.news);
     for await (const entity of this.news) {
       await MapperRegistry.getMapper(entity).insert(entity);
     }
@@ -58,5 +59,15 @@ export class UnitOfWork {
 
   get dirty() {
     return Array.from(this._dirty);
+  }
+
+  private static current: UnitOfWork;
+
+  static newCurrent() {
+    this.current = new UnitOfWork();
+  }
+
+  static getCurrent() {
+    return this.current;
   }
 }

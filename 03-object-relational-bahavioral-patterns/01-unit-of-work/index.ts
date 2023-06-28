@@ -10,6 +10,10 @@ const productMapper = new ProductMapper();
 MapperRegistry.add(Person, personMapper);
 MapperRegistry.add(Product, productMapper);
 
+process.on('uncaughtException', console.error);
+process.on('unhandledRejection', console.error);
+process.on('SIGTERM', console.error);
+
 describe('UnitOfWork', () => {
   describe('registerNew', () => {
     it('should register new entity', () => {
@@ -246,6 +250,30 @@ describe('UnitOfWork', () => {
         new Product(4, 'PlayStation 5', 5999),
       ]);
       assert.deepStrictEqual(await personMapper.all(), [new Person(3, 'Label')]);
+    });
+  });
+
+  describe('entity unit of work', () => {
+    before(async () => {
+      try {
+        await database.start();
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    it('should create', async () => {
+      console.log('HEY');
+      UnitOfWork.newCurrent();
+      Product.create(Product.NOID, 'Xbox', 2000);
+      Product.create(Product.NOID, 'USB', 10);
+      Person.create(Product.NOID, 'Jeferson');
+      await UnitOfWork.getCurrent().commit();
+      assert.deepStrictEqual(await productMapper.all(), [
+        new Product(Product.NOID, 'Xbox', 2000),
+        new Product(Product.NOID, 'USB', 10),
+      ]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(Product.NOID, 'Jeferson')]);
     });
   });
 });

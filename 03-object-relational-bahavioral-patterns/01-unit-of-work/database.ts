@@ -11,11 +11,17 @@ let db: sqlite.Database | null = null;
 const databasePath = path.resolve(__dirname, 'database.sqlite');
 
 async function startDb() {
-  if (db) throw Error('Database already initialized');
+  if (db) {
+    await new Promise<void>((resolve) => {
+      db?.getDatabaseInstance().close(() => resolve());
+    });
+  }
+  db = null;
   await removeDatabase();
   await createDatabase();
   db = await open({ filename: databasePath, driver: sqlite3.cached.Database });
   await migrate();
+  console.log('DB');
 }
 
 async function removeDatabase() {
