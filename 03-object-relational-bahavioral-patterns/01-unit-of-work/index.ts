@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
+import { after, before, beforeEach, describe, it } from 'node:test';
 import database from './database';
 import { Person, Product } from './entities';
 import { UnitOfWork } from './unitofwork';
@@ -255,25 +255,36 @@ describe('UnitOfWork', () => {
 
   describe('entity unit of work', () => {
     before(async () => {
-      try {
-        await database.start();
-      } catch (error) {
-        console.error(error);
-      }
+      await database.start();
     });
 
-    it('should create', async () => {
-      console.log('HEY');
+    it('should create news', async () => {
       UnitOfWork.newCurrent();
       Product.create(Product.NOID, 'Xbox', 2000);
       Product.create(Product.NOID, 'USB', 10);
       Person.create(Product.NOID, 'Jeferson');
       await UnitOfWork.getCurrent().commit();
+      assert.deepStrictEqual(await productMapper.all(), [new Product(1, 'Xbox', 2000), new Product(2, 'USB', 10)]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(1, 'Jeferson')]);
+    });
+
+    it('should update dirty', async () => {
+      UnitOfWork.newCurrent();
+      const newProduct = Product.create(Product.NOID, 'Novo Legal', 1);
+      newProduct.name = 'Camera';
+      const product = await productMapper.getById(1);
+      product.name = 'Xbox 2';
+      product.price = 1900;
+      const person = await personMapper.getById(1);
+      person.name = 'Jeferson Santos';
+      Person.create(Person.NOID, 'Madara');
+      await UnitOfWork.getCurrent().commit();
       assert.deepStrictEqual(await productMapper.all(), [
-        new Product(Product.NOID, 'Xbox', 2000),
-        new Product(Product.NOID, 'USB', 10),
+        new Product(1, 'Xbox 2', 1900),
+        new Product(2, 'USB', 10),
+        new Product(3, 'Camera', 1),
       ]);
-      assert.deepStrictEqual(await personMapper.all(), [new Person(Product.NOID, 'Jeferson')]);
+      assert.deepStrictEqual(await personMapper.all(), [new Person(1, 'Jeferson Santos'), new Person(2, 'Madara')]);
     });
   });
 });

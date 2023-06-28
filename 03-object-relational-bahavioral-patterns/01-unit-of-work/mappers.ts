@@ -30,6 +30,12 @@ export class PersonMapper implements Mapper<Person> {
     const rows = await database.instance().all(sql);
     return rows.map((row) => new Person(row.id, row.name));
   }
+
+  async getById(id: number) {
+    const sql = `SELECT * FROM people WHERE id = ?`;
+    const row = await database.instance().get(sql, id);
+    return new Person(row.id, row.name);
+  }
 }
 
 export class ProductMapper implements Mapper<Product> {
@@ -54,6 +60,12 @@ export class ProductMapper implements Mapper<Product> {
     const sql = `SELECT * FROM products`;
     const rows = await database.instance().all(sql);
     return rows.map((row) => new Product(row.id, row.name, row.price));
+  }
+
+  async getById(id: number) {
+    const sql = `SELECT * FROM products WHERE id = ?`;
+    const row = await database.instance().get(sql, id);
+    return new Product(row.id, row.name, row.price);
   }
 }
 

@@ -5,7 +5,16 @@ export abstract class Entity {
     return -1;
   }
 
-  constructor(public id: number) {}
+  constructor(public id: number) {
+    const proxy = new Proxy(this, {
+      set(target, field, newValue) {
+        Reflect.set(target, field, newValue);
+        if (UnitOfWork.getCurrent()) target.markDirty();
+        return true;
+      },
+    });
+    return proxy;
+  }
 
   protected markNew() {
     UnitOfWork.getCurrent().registerNew(this);
@@ -21,7 +30,7 @@ export abstract class Entity {
 }
 
 export class Person extends Entity {
-  constructor(id: number, readonly name: string) {
+  constructor(id: number, public name: string) {
     super(id);
   }
 
@@ -33,7 +42,7 @@ export class Person extends Entity {
 }
 
 export class Product extends Entity {
-  constructor(id: number, readonly name: string, readonly price: number) {
+  constructor(id: number, public name: string, public price: number) {
     super(id);
   }
 

@@ -11,17 +11,12 @@ let db: sqlite.Database | null = null;
 const databasePath = path.resolve(__dirname, 'database.sqlite');
 
 async function startDb() {
-  if (db) {
-    await new Promise<void>((resolve) => {
-      db?.getDatabaseInstance().close(() => resolve());
-    });
-  }
+  await db?.close();
   db = null;
   await removeDatabase();
   await createDatabase();
-  db = await open({ filename: databasePath, driver: sqlite3.cached.Database });
+  db = await open({ filename: databasePath, driver: sqlite3.Database });
   await migrate();
-  console.log('DB');
 }
 
 async function removeDatabase() {

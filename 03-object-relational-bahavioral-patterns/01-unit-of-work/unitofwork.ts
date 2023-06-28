@@ -37,7 +37,6 @@ export class UnitOfWork {
   }
 
   async commit() {
-    console.log(this.news);
     for await (const entity of this.news) {
       await MapperRegistry.getMapper(entity).insert(entity);
     }
