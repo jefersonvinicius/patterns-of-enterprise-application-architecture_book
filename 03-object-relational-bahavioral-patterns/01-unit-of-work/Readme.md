@@ -1,0 +1,1 @@
+The Unit of Work is a design pattern that helps manage transaction operations by saving all changes and then committing them all at once.
