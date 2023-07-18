@@ -1,13 +1,12 @@
 package entities;
 
-import java.math.BigInteger;
 
 public class Product {
   private Long id;
   private String name;
   private double price;
   
-  Product(Long id, String name, double price) {
+  public Product(Long id, String name, double price) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -35,5 +34,13 @@ public class Product {
 
   public void setPrice(double price) {
     this.price = price;
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) return true;
+    if (obj == null || obj.getClass() != this.getClass()) return false;
+    Product other = (Product) obj;
+    return this.id.equals(other.getId()) && this.name.equals(other.getName()) && this.price == other.getPrice(); 
   }
 }

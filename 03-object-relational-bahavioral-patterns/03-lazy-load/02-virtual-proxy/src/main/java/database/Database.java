@@ -2,6 +2,7 @@ package database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class Database {
@@ -9,12 +10,22 @@ public class Database {
   private Connection connection;
   
   public static Connection getConnection() {
-    return Database.instance.getInstance();
+    try {
+      return Database.instance.getInstance();
+    } catch (Exception e) {
+      System.out.println(e);
+      return null;
+    }
   }
   
-  Connection getInstance() {
-    if (this.connection == null) this.connection = this.connect();
+  Connection getInstance() throws Exception {
+    if (this.connection == null) throw new Exception("Database not started.");
     return this.connection;
+  }
+  
+  void start() {
+    this.connection = this.connect();
+    this.migrate();
   }
   
   private Connection connect() {
@@ -25,4 +36,16 @@ public class Database {
       return null;
     }
   }
+  
+  private void migrate() {
+    try {
+      PreparedStatement stmt = this.connection.prepareStatement(migrationSQL);
+      stmt.executeUpdate();  
+    } catch (SQLException e) {
+      System.out.println(e);
+    }
+  }
+  
+  static final String migrationSQL = "CREATE TABLE products (" 
+                                   + "  name";
 }
