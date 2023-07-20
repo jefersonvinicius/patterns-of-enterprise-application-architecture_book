@@ -3,10 +3,7 @@ package mappers;
 import database.Database;
 import entities.Product;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +14,10 @@ public class ProductMapper {
 
   public List<Product> findForSupplier(Long supplierId) {
     try {
-      Connection connection = Database.getConnection();
-      String sql = "SELECT * FROM products";
+      Connection connection = Database.getCurrentConnection();
+      String sql = "SELECT * FROM products WHERE supplier_id = ?";
       PreparedStatement stmt = connection.prepareStatement(sql);
+      stmt.setLong(1, supplierId);
       ResultSet resultSet = stmt.executeQuery();
       ArrayList<Product> result = new ArrayList<>();
       while (resultSet.next()) {
