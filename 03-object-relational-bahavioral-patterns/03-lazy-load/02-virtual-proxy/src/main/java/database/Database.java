@@ -56,12 +56,4 @@ public class Database {
       e.printStackTrace();
     }
   }
-  
-  static final String migrationSQL = "CREATE TABLE products (" 
-                                   + "  id INTEGER PRIMARY KEY AUTOINCREMENT"
-                                   + "  name VARCHAR(255),"
-                                   + "  price DECIMAL,"
-                                   + "  supplier_id INTEGER,"
-                                   + "  FOREIGN KEY(supplier_id) REFERENCES suppliers(id));";
-  
 }

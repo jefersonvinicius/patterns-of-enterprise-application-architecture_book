@@ -8,8 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductMapper {
+  
+  private static ProductMapper instance;
+  
   public static ProductMapper create() {
-    return new ProductMapper();
+    if (instance == null) instance = new ProductMapper();
+    return instance;
   }
 
   public List<Product> findForSupplier(Long supplierId) {

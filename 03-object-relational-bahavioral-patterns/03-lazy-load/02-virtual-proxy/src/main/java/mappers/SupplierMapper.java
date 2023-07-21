@@ -13,19 +13,23 @@ import java.util.List;
 
 public class SupplierMapper {
   public static class ProductLoader implements VirtualListLoader<Product> {
-    private Long supplierId;
+    private final Long supplierId;
+    private final ProductMapper productMapper;
     
-    ProductLoader(Long supplierId) {
+    ProductLoader(ProductMapper productMapper, Long supplierId) {
       this.supplierId = supplierId;
+      this.productMapper = productMapper;
     }
     
     public List<Product> load() {
-      return ProductMapper.create().findForSupplier(supplierId);
+      return this.productMapper.findForSupplier(supplierId);
     }
   }
   
-  public static SupplierMapper create() {
-    return new SupplierMapper();
+  private final ProductMapper productMapper; 
+  
+  public SupplierMapper(ProductMapper productMapper) {
+    this.productMapper = productMapper;
   }
 
   public Supplier findById(Long supplierId) {
@@ -36,8 +40,7 @@ public class SupplierMapper {
       ResultSet resultSet = stmt.executeQuery();
       if (!resultSet.isBeforeFirst()) return null;
       resultSet.next();
-      Supplier supplier = doLoad(resultSet);
-      return supplier;
+      return doLoad(resultSet);
     } catch (SQLException e) {
       e.printStackTrace();
       return null;
@@ -48,7 +51,8 @@ public class SupplierMapper {
     Long id = rs.getLong("id");
     String name = rs.getString("name");
     Supplier supplier = new Supplier(id, name);
-    supplier.setProducts(new VirtualList<>(new ProductLoader(supplier.getId())));
+    ProductLoader loader = new ProductLoader(this.productMapper, supplier.getId());
+    supplier.setProducts(new VirtualList<>(loader));
     return supplier;
   }
 }
