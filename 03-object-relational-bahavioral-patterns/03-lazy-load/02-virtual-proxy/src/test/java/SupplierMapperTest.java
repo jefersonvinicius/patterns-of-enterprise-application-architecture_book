@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-
 public class SupplierMapperTest {
   @BeforeAll
   static void setup() { Database.start(); }
@@ -18,7 +16,7 @@ public class SupplierMapperTest {
     ProductMapper productMapperSpy = spy(ProductMapper.create());
     SupplierMapper supplierMapper = new SupplierMapper(productMapperSpy);
     Supplier supplier = supplierMapper.findById(1L);
-    List products = supplier.getProducts();
+    var products = supplier.getProducts();
     assertEquals(products.size(), 4);
     assertEquals(supplier.getName(), "Jeferson");
     assertEquals(products.size(), 4);
