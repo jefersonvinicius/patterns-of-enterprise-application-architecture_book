@@ -1,0 +1,1 @@
+A value holder is a wrapper for an object being lazily loaded. When the object is requested, the request will be delegated to the value holder, which knows how to load that value.

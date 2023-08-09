@@ -1,0 +1,1 @@
+A virtual proxy behaves like an regular object, but in its implementation details, it is lazily loaded only when needed.
