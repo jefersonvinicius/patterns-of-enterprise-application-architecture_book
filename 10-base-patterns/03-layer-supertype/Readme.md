@@ -1,0 +1,1 @@
+A superclass to put common features of a layer
