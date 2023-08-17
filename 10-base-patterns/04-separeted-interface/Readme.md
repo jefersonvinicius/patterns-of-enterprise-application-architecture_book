@@ -1,0 +1,1 @@
+The idea is to create an interface for a particular functionality, and then have a separate third-party package implement this interface. This approach facilitates managing the system's dependencies.

@@ -1,14 +1,15 @@
 import { UniOfWork } from './datautils';
-import { Entity, Order } from './orders';
+import { Customer, Entity, Order } from './orders';
 
 interface Mapper<T extends Entity> {
   insert(entity: T): Promise<T>;
   delete(entity: T): Promise<void>;
   update(entity: T): Promise<void>;
+  findById(id: number): Promise<T | null>;
 }
 
 let orderID = 1;
-class OrderMapper implements Mapper<Order> {
+export class OrderMapper implements Mapper<Order> {
   private orders: Order[] = [];
   async insert(entity: Order): Promise<Order> {
     entity.id = orderID++;
@@ -22,6 +23,31 @@ class OrderMapper implements Mapper<Order> {
     const index = this.orders.findIndex((order) => order === entity);
     this.orders.splice(index, 1, entity);
   }
+
+  async findById(id: number): Promise<Order | null> {
+    return this.orders.find((order) => order.id === id) || null;
+  }
+}
+
+let customerID = 1;
+export class CustomerMapper implements Mapper<Customer> {
+  private customers: Customer[] = [];
+  async insert(entity: Customer): Promise<Customer> {
+    entity.id = customerID++;
+    this.customers.push(entity);
+    return entity;
+  }
+  async delete(entity: Customer): Promise<void> {
+    this.customers = this.customers.filter((order) => order !== entity);
+  }
+  async update(entity: Customer): Promise<void> {
+    const index = this.customers.findIndex((order) => order === entity);
+    this.customers.splice(index, 1, entity);
+  }
+
+  async findById(id: number): Promise<Customer | null> {
+    return this.customers.find((order) => order.id === id) || null;
+  }
 }
 
 export class MapperRegistry {
@@ -29,6 +55,12 @@ export class MapperRegistry {
 
   static add(entityClass: new (...args: any[]) => Entity, mapper: Mapper<Entity>) {
     this.mappers.set(entityClass.name, mapper);
+  }
+
+  static getMapperByClass<T extends Entity>(entityClass: new (...args: any[]) => T) {
+    const result = this.mappers.get(entityClass.name) as Mapper<T>;
+    if (!result) throw Error(`Mapper for entity ${entityClass.name} not found`);
+    return result;
   }
 
   static getMapper(entity: Entity) {
