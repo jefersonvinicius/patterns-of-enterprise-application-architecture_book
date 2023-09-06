@@ -12,6 +12,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"));
+    testImplementation("org.mockito:mockito-core:1.+")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:3.2.0")
     implementation("org.xerial:sqlite-jdbc:3.42.0.0")
 }
 

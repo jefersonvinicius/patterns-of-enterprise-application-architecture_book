@@ -15,7 +15,6 @@ class MapperRegistry: IDataSource {
     }
     
     fun <E: DomainObject> add(domainObjectClass: KClass<E>, mapper: Mapper<E>) {
-      println("ADDING ${domainObjectClass.simpleName.toString()}")
       instance.mappers[domainObjectClass.simpleName.toString()] = mapper
     }
     

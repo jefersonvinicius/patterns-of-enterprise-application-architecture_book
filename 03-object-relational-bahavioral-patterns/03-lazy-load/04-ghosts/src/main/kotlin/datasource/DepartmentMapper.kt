@@ -5,7 +5,7 @@ import domain.entities.DomainObject
 import domain.entities.Employee
 import java.sql.ResultSet
 
-class DepartmentMapper: Mapper<Department>() {
+open class DepartmentMapper: Mapper<Department>() {
   override val findStatement: String
     get() = "SELECT * FROM departments WHERE id = ?"
 

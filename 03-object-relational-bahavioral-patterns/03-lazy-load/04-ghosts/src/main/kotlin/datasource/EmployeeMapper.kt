@@ -5,7 +5,7 @@ import domain.entities.DomainObject
 import domain.entities.Employee
 import java.sql.ResultSet
 
-class EmployeeMapper: Mapper<Employee>() {
+open class EmployeeMapper: Mapper<Employee>() {
   override val findStatement: String
     get() = "SELECT * FROM employees WHERE id = ?"
 
