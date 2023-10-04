@@ -44,12 +44,20 @@ export abstract class AbstractMapper {
     return domainObject;
   }
 
-  doRegister(id: number, domainObject: any) {
+  register(id: number, domainObject: DomainObject) {
+    this.doRegister(id, domainObject);
+  }
+
+  private doRegister(id: number, domainObject: any) {
     assert(!this.loadedMap.has(id));
     this.loadedMap.set(id, domainObject);
   }
 
-  abstract doLoad(id: number, result: any): Promise<DomainObject>;
+  isLoaded(id: number) {
+    return this.loadedMap.has(id);
+  }
+
+  protected abstract doLoad(id: number, result: any): Promise<DomainObject>;
 
   abstract update(domainObject: DomainObject): Promise<void>;
 }
@@ -71,16 +79,27 @@ export class ArtistMapper extends AbstractMapper {
 }
 
 export class AlbumMapper extends AbstractMapper {
-  protected findStatement = 'SELECT * FROM albums WHERE id = ?';
+  protected findStatement =
+    'SELECT a.id, a.title, a.artist_id, r.name FROM albums a, artists r WHERE a.id = ? AND a.artist_id = r.id';
 
   async find(id: number) {
     return (await this.abstractFind(id)) as Album | null;
   }
 
   async doLoad(id: number, result: any) {
-    const artist = await MapperRegistry.artist.find(result.artist_id);
-    if (!artist) throw new Error(`Album ${result.title} not has a artist`);
-    return new Album(id, result.title, artist);
+    const { title } = result;
+    const artistId = Number(result.artist_id);
+    const artistMapper = MapperRegistry.artist;
+    const artist = artistMapper.isLoaded(artistId)
+      ? (await artistMapper.find(artistId))!
+      : this.loadArtist(artistId, result);
+    return new Album(id, title, artist);
+  }
+
+  private loadArtist(id: number, result: any) {
+    const artist = new Artist(id, result.name);
+    MapperRegistry.artist.register(artist.id, artist);
+    return artist;
   }
 
   async update(domainObject: DomainObject): Promise<void> {
