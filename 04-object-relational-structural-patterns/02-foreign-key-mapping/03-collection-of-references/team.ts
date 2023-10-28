@@ -22,7 +22,7 @@ export class Team extends DomainObject {
     this._players = this._players.filter((p) => p.id !== player.id);
   }
 
-  private static PlayerMover = class {
+  private static PlayerMover = class PlayerMover {
     constructor(readonly teamSource: Team, readonly player: Player) {}
 
     to(team: Team) {
