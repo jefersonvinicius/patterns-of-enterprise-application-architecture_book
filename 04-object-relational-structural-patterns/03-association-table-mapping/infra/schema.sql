@@ -18,13 +18,14 @@ CREATE TABLE skills (
   name VARCHAR(255)
 );
 
--- Inserting teams
+
 INSERT INTO employees (name, department) VALUES ('Jeferson', 'TI');
 INSERT INTO employees (name, department) VALUES ('Kratos', 'Customer Success');
 INSERT INTO employees (name, department) VALUES ('Celso Mussumano', 'Sales');
-
--- Inserting players for Cruzeiro
+  
 INSERT INTO skills (name) VALUES ('Javascript');
 INSERT INTO skills (name) VALUES ('Communication');
 INSERT INTO skills (name) VALUES ('Public Speech');
 INSERT INTO skills (name) VALUES ('Design Patterns');
+
+INSERT INTO skills_employees (employee_id, skill_id) VALUES (1, 1); 
