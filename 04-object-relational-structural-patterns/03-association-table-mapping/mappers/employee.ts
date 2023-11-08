@@ -35,7 +35,7 @@ export class EmployeeMapper extends AbstractMapper {
 
   async save(domainObject: DomainObject): Promise<void> {
     const employee = domainObject as Employee;
-    const sql = 'UPDATE TABLE employees SET name = ?, department = ? WHERE id = ?';
+    const sql = 'UPDATE employees SET name = ?, department = ? WHERE id = ?';
     await database.instance().run(sql, employee.name, employee.department, employee.id);
     await this.saveSkills(employee);
   }
@@ -45,11 +45,12 @@ export class EmployeeMapper extends AbstractMapper {
     const insertsStatements = employee.skills.map(
       (skill) => `INSERT INTO skills_employees (skill_id, employee_id) VALUES (${skill.id}, ${employee.id})`
     );
-    await database.instance().run(insertsStatements.join(';'));
+    const sql = insertsStatements.join(';');
+    await database.instance().run(sql);
   }
 
   private async deleteSkills(employee: Employee) {
-    const sql = 'DELETE FROM skills_employees WHERE id IN ?';
-    await database.instance().run(sql, `(${employee.skills.join(',')}`);
+    const sql = `DELETE FROM skills_employees WHERE employee_id = ?;`;
+    await database.instance().run(sql, employee.id);
   }
 }

@@ -4,7 +4,7 @@ import { Skill } from './skill';
 export class Employee extends DomainObject {
   private _skills: Skill[] = [];
 
-  constructor(readonly id: number, readonly name: string, readonly department: string) {
+  constructor(readonly id: number, readonly name: string, public department: string) {
     super();
   }
 

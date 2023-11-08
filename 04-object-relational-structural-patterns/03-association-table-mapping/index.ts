@@ -31,6 +31,17 @@ describe('AssociationTableMapping', () => {
 
   it('should save employee with skills', async () => {
     const employee = await MapperRegistry.employee.find(1);
+    const communication = await MapperRegistry.skill.find(2);
+    const javascript = employee?.skills[0];
     employee!.department = 'Marketing';
+    employee!.addSkill(communication!);
+    employee!.removeSkill(javascript!);
+    await MapperRegistry.employee.save(employee!);
+    MapperRegistry.employee.restartIdentityMap();
+    const employeeUpdated = await MapperRegistry.employee.find(1);
+    assert.deepStrictEqual(employeeUpdated?.id, 1);
+    assert.deepStrictEqual(employeeUpdated?.name, 'Jeferson');
+    assert.deepStrictEqual(employeeUpdated?.department, 'Marketing');
+    assert.deepStrictEqual(employeeUpdated?.skills, [new Skill(2, 'Communication')]);
   });
 });
