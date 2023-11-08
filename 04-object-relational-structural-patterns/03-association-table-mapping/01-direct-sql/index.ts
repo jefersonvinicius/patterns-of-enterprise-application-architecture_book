@@ -1,4 +1,4 @@
-import { beforeEach, describe, it } from 'node:test';
+import { beforeEach, describe, it, mock } from 'node:test';
 import database from './infra/database';
 import { MapperRegistry } from './mappers/registry';
 import { EmployeeMapper } from './mappers/employee';
@@ -43,5 +43,15 @@ describe('AssociationTableMapping', () => {
     assert.deepStrictEqual(employeeUpdated?.name, 'Jeferson');
     assert.deepStrictEqual(employeeUpdated?.department, 'Marketing');
     assert.deepStrictEqual(employeeUpdated?.skills, [new Skill(2, 'Communication')]);
+  });
+
+  it('should call one query for each employee to load skills', async () => {
+    const databaseGetAllMethod = mock.method(database.instance(), 'all');
+    const employees = await MapperRegistry.employee.findAll();
+    assert.strictEqual(employees.length, 3);
+    const callsMadeForSkills = databaseGetAllMethod.mock.calls.filter(
+      (call) => call.arguments[0] === 'SELECT * FROM skills_employees WHERE employee_id = ?'
+    );
+    assert.deepStrictEqual(callsMadeForSkills.length, 3);
   });
 });

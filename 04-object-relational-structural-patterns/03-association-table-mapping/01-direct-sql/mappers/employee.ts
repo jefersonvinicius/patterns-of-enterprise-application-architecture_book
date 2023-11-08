@@ -13,7 +13,14 @@ export class EmployeeMapper extends AbstractMapper {
     return (await this.abstractFind(id)) as Employee | null;
   }
 
-  protected async doLoad(id: number, result: any): Promise<DomainObject> {
+  async findAll(): Promise<Employee[]> {
+    const sql = 'SELECT * FROM employees';
+    const rows = await database.instance().all(sql);
+    const loadPromises = rows.map((row) => this.doLoad(row.id, row));
+    return Promise.all(loadPromises);
+  }
+
+  protected async doLoad(id: number, result: any): Promise<Employee> {
     const employee = new Employee(id, result.name, result.department);
     await this.loadSkills(employee);
     return employee;
