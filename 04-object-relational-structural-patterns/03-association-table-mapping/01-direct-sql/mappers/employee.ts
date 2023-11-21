@@ -53,7 +53,7 @@ export class EmployeeMapper extends AbstractMapper {
       (skill) => `INSERT INTO skills_employees (skill_id, employee_id) VALUES (${skill.id}, ${employee.id})`
     );
     const sql = insertsStatements.join(';');
-    await database.instance().run(sql);
+    await database.instance().exec(sql);
   }
 
   private async deleteSkills(employee: Employee) {
