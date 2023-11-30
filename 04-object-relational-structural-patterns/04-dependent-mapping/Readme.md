@@ -1,0 +1,1 @@
+Dependent mapping is good when one thing has many related parts and only the main thing refers to these parts. For example, the album is the main thing and the tracks are its related parts.

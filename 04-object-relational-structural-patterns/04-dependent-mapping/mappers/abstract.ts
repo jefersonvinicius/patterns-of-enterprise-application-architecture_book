@@ -13,13 +13,13 @@ export abstract class AbstractMapper {
   protected async abstractFind(id: number) {
     const domainObject = this.loadedMap.get(id);
     if (domainObject) return domainObject;
-    const result = await database.instance().get(this.findStatement, id);
-    if (!result) return null;
+    const result = await database.instance().all(this.findStatement, id);
+    if (!result.length) return null;
     return this.load(result);
   }
 
   protected async load(result: any): Promise<DomainObject> {
-    const id = result.id;
+    const id = result[0].id;
     if (this.loadedMap.has(id)) return this.loadedMap.get(id)!;
     const domainObject = await this.doLoad(id, result);
     this.doRegister(id, domainObject);
@@ -40,6 +40,4 @@ export abstract class AbstractMapper {
   }
 
   protected abstract doLoad(id: number, result: any): Promise<DomainObject>;
-
-  abstract save(domainObject: DomainObject): Promise<void>;
 }
