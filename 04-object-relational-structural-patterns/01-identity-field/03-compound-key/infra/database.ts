@@ -11,12 +11,17 @@ let db: sqlite.Database | null = null;
 const databasePath = path.resolve(__dirname, 'database.sqlite');
 
 async function startDb() {
-  await db?.close();
-  db = null;
-  await removeDatabase();
-  await createDatabase();
-  db = await open({ filename: databasePath, driver: sqlite3.Database });
-  await migrate();
+  try {
+    await db?.close();
+    db = null;
+    await removeDatabase();
+    await createDatabase();
+    db = await open({ filename: databasePath, driver: sqlite3.Database });
+    await migrate();
+  } catch (error) {
+    console.log('Erro on start database: ', error);
+    throw error;
+  }
 }
 
 async function removeDatabase() {

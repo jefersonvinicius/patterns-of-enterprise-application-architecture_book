@@ -23,8 +23,20 @@ export class Key {
   toString() {
     return this.fields.join('-');
   }
+
+  static empty() {
+    return new Key();
+  }
 }
 
 export abstract class DomainObjectWithKey {
-  constructor(readonly key: Key) {}
+  constructor(protected _key: Key) {}
+
+  get key() {
+    return this._key;
+  }
+
+  setKey(value: Key) {
+    this._key = value;
+  }
 }

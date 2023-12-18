@@ -5,9 +5,12 @@ import { MapperRegistry } from './mappers/registry';
 import { OrderMapper } from './mappers/order';
 import { Order } from './domain/order';
 import database from './infra/database';
+import { OrderItemMapper } from './mappers/order-item';
+import { OrderItem } from './domain/order-item';
 
 MapperRegistry.configure({
   order: new OrderMapper(),
+  orderItem: new OrderItemMapper(),
 });
 
 describe('Key', () => {
@@ -44,17 +47,55 @@ describe('OrderMapper', () => {
 
   it('should find order', async () => {
     const order = await MapperRegistry.order.find(new Key(1));
-    assert.deepStrictEqual(order, new Order(new Key(1), 'Jeferson'));
+    assert.deepStrictEqual(
+      order,
+      new Order(new Key(1), 'Jeferson', [
+        new OrderItem(new Key(1, 1000), 1, 'Mac Mini'),
+        new OrderItem(new Key(1, 1001), 4, 'Vassoura'),
+        new OrderItem(new Key(1, 1002), 1, 'Laptop'),
+      ])
+    );
+    assert.deepStrictEqual(MapperRegistry.order.isLoaded(new Key(1)), true);
+  });
+
+  it('should return null when order does not exists', async () => {
+    const order = await MapperRegistry.order.find(new Key(999));
+    assert.deepStrictEqual(order, null);
+  });
+
+  it('should insert order', async () => {
+    const newOrder = new Order(Key.empty(), 'Outro', []);
+    const keyInserted = await MapperRegistry.order.insert(newOrder);
+    assert.deepStrictEqual(keyInserted, new Key(3));
+    const order = await MapperRegistry.order.find(new Key(3));
+    assert.ok(order === newOrder);
+    assert.deepStrictEqual(order, new Order(new Key(3), 'Outro', []));
   });
 });
 
-describe('OrderItemMapper', () => {
+describe('OrderItemMapper', async () => {
   before(async () => {
     await database.start();
   });
 
-  it('should find order', async () => {
-    const order = await MapperRegistry.order.find(new Key(1));
-    assert.deepStrictEqual(order, new Order(new Key(1), 'Jeferson'));
+  it('should find order item', async () => {
+    const orderItem = await MapperRegistry.orderItem.find(new Key(1, 1000));
+    assert.deepStrictEqual(orderItem, new OrderItem(new Key(1, 1000), 1, 'Mac Mini'));
+    assert.strictEqual(orderItem.orderId, 1);
+    assert.strictEqual(orderItem.seq, 1000);
+  });
+
+  it('should insert order item', async () => {
+    const newOrderItem = new OrderItem(OrderItem.emptyKey({ orderId: 3 }), 2, 'Ar condicionado');
+    const orderItemInsertedKey = await MapperRegistry.orderItem.insert(newOrderItem);
+    assert.deepStrictEqual(orderItemInsertedKey, new Key(3, 1006));
+    MapperRegistry.orderItem.restartIdentityMap();
+    const order = await MapperRegistry.orderItem.find(new Key(3, 1006));
+    assert.deepStrictEqual(order, new OrderItem(new Key(3, 1006), 2, 'Ar condicionado'));
+  });
+
+  it('should return null when order item does not exists', async () => {
+    const orderItem = await MapperRegistry.orderItem.find(new Key(2, 1000));
+    assert.deepStrictEqual(orderItem, null);
   });
 });
