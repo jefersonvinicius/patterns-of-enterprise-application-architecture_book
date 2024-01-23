@@ -67,9 +67,29 @@ describe('OrderMapper', () => {
     const newOrder = new Order(Key.empty(), 'Outro', []);
     const keyInserted = await MapperRegistry.order.insert(newOrder);
     assert.deepStrictEqual(keyInserted, new Key(3));
+    MapperRegistry.order.restartIdentityMap();
     const order = await MapperRegistry.order.find(new Key(3));
-    assert.ok(order === newOrder);
     assert.deepStrictEqual(order, new Order(new Key(3), 'Outro', []));
+  });
+
+  it('should update order', async () => {
+    const order = await MapperRegistry.order.find(new Key(3));
+    assert(order);
+    order.customer = 'Mudo';
+    await MapperRegistry.order.update(order);
+    MapperRegistry.order.restartIdentityMap();
+    const updated = await MapperRegistry.order.find(new Key(3));
+    assert(updated);
+    assert.deepStrictEqual(updated, new Order(new Key(3), 'Mudo', []));
+  });
+
+  it('should delete order', async () => {
+    const order = await MapperRegistry.order.find(new Key(3));
+    assert(order);
+    await MapperRegistry.order.delete(order);
+    MapperRegistry.order.restartIdentityMap();
+    const deleted = await MapperRegistry.order.find(new Key(3));
+    assert.deepStrictEqual(deleted, null);
   });
 });
 
@@ -97,5 +117,25 @@ describe('OrderItemMapper', async () => {
   it('should return null when order item does not exists', async () => {
     const orderItem = await MapperRegistry.orderItem.find(new Key(2, 1000));
     assert.deepStrictEqual(orderItem, null);
+  });
+
+  it('should update order item', async () => {
+    const orderItem = await MapperRegistry.orderItem.find(new Key(1, 1000));
+    assert(orderItem);
+    orderItem.amount = 1;
+    orderItem.product = 'Mac Mini M2';
+    await MapperRegistry.orderItem.update(orderItem);
+    MapperRegistry.orderItem.restartIdentityMap();
+    const orderItemUpdated = await MapperRegistry.orderItem.find(new Key(1, 1000));
+    assert.deepStrictEqual(orderItemUpdated, new OrderItem(new Key(1, 1000), 1, 'Mac Mini M2'));
+  });
+
+  it('should delete order item', async () => {
+    const orderItem = await MapperRegistry.orderItem.find(new Key(1, 1000));
+    assert(orderItem);
+    await MapperRegistry.orderItem.delete(orderItem);
+    MapperRegistry.orderItem.restartIdentityMap();
+    const deleted = await MapperRegistry.orderItem.find(new Key(1, 1000));
+    assert.deepStrictEqual(deleted, null);
   });
 });

@@ -17,6 +17,11 @@ export class OrderItemMapper extends AbstractMapper {
     WHERE order_id = ?
   `;
 
+  protected updateStatement = `
+    UPDATE order_items SET amount = ?, product = ?
+    WHERE order_id = ? AND seq = ?
+  `;
+
   async find(key: Key): Promise<OrderItem | null> {
     return (await this.abstractFind(key)) as OrderItem | null;
   }
@@ -51,6 +56,18 @@ export class OrderItemMapper extends AbstractMapper {
   protected insertData(object: DomainObjectWithKey): any[] {
     const orderItem = object as OrderItem;
     return [orderItem.orderId, orderItem.amount, orderItem.product];
+  }
+
+  protected updateData(object: DomainObjectWithKey): any[] {
+    const orderItem = object as OrderItem;
+    return [orderItem.amount, orderItem.product, orderItem.orderId, orderItem.seq];
+  }
+
+  protected deleteStatement = 'DELETE FROM order_items WHERE order_id = ? AND seq = ?';
+
+  protected deleteData(object: DomainObjectWithKey): any[] {
+    const orderItem = object as OrderItem;
+    return [orderItem.orderId, orderItem.seq];
   }
 
   protected override async insertKey(result: any): Promise<Key> {

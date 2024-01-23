@@ -1,7 +1,7 @@
 import { DomainObjectWithKey, Key } from './base';
 
 export class OrderItem extends DomainObjectWithKey {
-  constructor(key: Key, readonly amount: number, readonly product: string) {
+  constructor(key: Key, public amount: number, public product: string) {
     super(key);
   }
 

@@ -2,7 +2,6 @@ import assert from 'node:assert';
 import { DomainObjectWithKey } from '../domain/base';
 import database from '../infra/database';
 import { Key } from '../domain/base';
-import { Domain, create } from 'node:domain';
 
 export abstract class AbstractMapper {
   protected abstract findStatement: string;
@@ -52,6 +51,22 @@ export abstract class AbstractMapper {
   isLoaded(key: Key) {
     return this.loadedMap.has(key.toString());
   }
+
+  async update(domainObject: DomainObjectWithKey) {
+    await database.instance().run(this.updateStatement, ...this.updateData(domainObject));
+  }
+
+  protected abstract updateStatement: string;
+
+  protected abstract updateData(object: DomainObjectWithKey): any[];
+
+  async delete(domainObject: DomainObjectWithKey) {
+    await database.instance().run(this.deleteStatement, ...this.deleteData(domainObject));
+  }
+
+  protected abstract deleteStatement: string;
+
+  protected abstract deleteData(object: DomainObjectWithKey): any[];
 
   protected createKey(result: any) {
     return new Key(result.id);
