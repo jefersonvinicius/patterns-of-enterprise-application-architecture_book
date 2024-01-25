@@ -1,0 +1,1 @@
+Embedded Value is a concept where Value Objects are used to encapsulate and represent common values from a database in an object-oriented manner

@@ -1,0 +1,1 @@
+Serialized LOB (Large Object) involves storing a complex object in a database field as a serialized binary or text format, such as JSON or XML. This technique allows for the preservation and retrieval of the complex object's state, structure, and data in a format that can be easily stored within a database

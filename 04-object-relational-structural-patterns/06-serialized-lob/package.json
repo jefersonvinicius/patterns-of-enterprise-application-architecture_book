@@ -1,0 +1,13 @@
+{
+  "name": "06-serialized-lob",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.11.6",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
