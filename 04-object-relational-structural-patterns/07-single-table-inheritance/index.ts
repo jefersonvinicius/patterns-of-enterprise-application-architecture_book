@@ -27,7 +27,13 @@ class Footballer extends Player {
 }
 
 class Cricketer extends Player {
-  constructor(id: number, name: string) {
+  constructor(id: number, name: string, public battingAverage: number) {
+    super(id, name, PlayerType.Footballer);
+  }
+}
+
+class Bowler extends Player {
+  constructor(id: number, name: string, public bowlerAverage: number) {
     super(id, name, PlayerType.Footballer);
   }
 }
@@ -50,6 +56,10 @@ abstract class Mapper {
 abstract class PlayerMapper extends Mapper {
   protected abstract playerType: PlayerType;
 
+  constructor() {
+    super();
+  }
+
   async load(domainObject: DomainObject, result: any) {
     const player = domainObject as Player;
     player.id = result.id;
@@ -60,7 +70,7 @@ abstract class PlayerMapper extends Mapper {
 class FootballerMapper extends PlayerMapper {
   protected playerType = PlayerType.Footballer;
 
-  protected findStatementSql = 'SELECT * FROM players WHERE id = ?';
+  protected findStatementSql = `SELECT * FROM players WHERE id = ? AND type = "${this.playerType}"`;
 
   async find(id: number) {
     return (await this.findAbstract(id)) as Footballer | null;
@@ -80,7 +90,7 @@ class FootballerMapper extends PlayerMapper {
 class CricketerMapper extends PlayerMapper {
   protected playerType = PlayerType.Cricketer;
 
-  protected findStatementSql = 'SELECT * FROM players WHERE id = ?';
+  protected findStatementSql = 'SELECT * FROM players WHERE id = ? AND type = "cricketer"';
 
   async find(id: number) {
     return (await this.findAbstract(id)) as Footballer | null;
@@ -88,20 +98,20 @@ class CricketerMapper extends PlayerMapper {
 
   async load(domainObject: DomainObject, result: any) {
     super.load(domainObject, result);
-    const footballer = domainObject as Footballer;
-    footballer.club = result.club;
+    const cricketer = domainObject as Cricketer;
+    cricketer.battingAverage = result.batting_average;
   }
 
   protected createDomainObject(): DomainObject {
-    return new Footballer(Footballer.NO_ID, '', '');
+    return new Cricketer(Cricketer.NO_ID, '', -1);
   }
 }
 
-before(async () => {
-  await database.start();
-});
-
 describe('FootballerMapper', () => {
+  before(async () => {
+    await database.start();
+  });
+
   it('should find', async () => {
     const footballerMapper = new FootballerMapper();
     assert.deepStrictEqual(await footballerMapper.find(999), null);
@@ -111,10 +121,27 @@ describe('FootballerMapper', () => {
 });
 
 describe('CricketerMapper', () => {
+  before(async () => {
+    await database.start();
+  });
+
   it('should find', async () => {
     const cricketerMapper = new CricketerMapper();
     assert.deepStrictEqual(await cricketerMapper.find(999), null);
-    const footballer = await cricketerMapper.find(2);
-    assert.deepStrictEqual(footballer, new Footballer(1, 'Messi', 'Inter Miami CF'));
+    const cricketer = await cricketerMapper.find(2);
+    assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
+  });
+});
+
+describe('BowlerMapper', () => {
+  before(async () => {
+    await database.start();
+  });
+
+  it('should find', async () => {
+    const bowlerMapper = new CricketerMapper();
+    assert.deepStrictEqual(await bowlerMapper.find(999), null);
+    const cricketer = await bowlerMapper.find(3);
+    assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
   });
 });

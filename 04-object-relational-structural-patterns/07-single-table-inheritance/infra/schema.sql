@@ -11,3 +11,9 @@ CREATE TABLE players (
 
 INSERT INTO players (name, type, club)
   VALUES ('Messi', 'footballer', 'Inter Miami CF');
+
+INSERT INTO players (name, type, batting_average)
+  VALUES ('Andrew Symonds', 'cricketer', 10);
+
+INSERT INTO players (name, type, bowling_average)
+  VALUES ('Williamson', 'bowler', 10);
