@@ -1,111 +1,8 @@
 import { before, describe, it } from 'node:test';
 import database from './infra/database';
 import assert from 'node:assert';
-
-class DomainObject {
-  static NO_ID = -2;
-
-  constructor(public id: number) {}
-}
-
-class Player extends DomainObject {
-  constructor(id: number, public name: string, public type: PlayerType) {
-    super(id);
-  }
-}
-
-enum PlayerType {
-  Footballer = 'footballer',
-  Cricketer = 'cricketer',
-  Bowler = 'bowler',
-}
-
-class Footballer extends Player {
-  constructor(id: number, name: string, public club: string) {
-    super(id, name, PlayerType.Footballer);
-  }
-}
-
-class Cricketer extends Player {
-  constructor(id: number, name: string, public battingAverage: number) {
-    super(id, name, PlayerType.Footballer);
-  }
-}
-
-class Bowler extends Player {
-  constructor(id: number, name: string, public bowlerAverage: number) {
-    super(id, name, PlayerType.Footballer);
-  }
-}
-
-abstract class Mapper {
-  protected abstract findStatementSql: string;
-
-  protected async findAbstract(id: number) {
-    const row = await database.instance().get(this.findStatementSql, id);
-    if (!row) return null;
-    const domainObject = this.createDomainObject();
-    await this.load(domainObject, row);
-    return domainObject;
-  }
-
-  protected abstract load(domainObject: DomainObject, result: any): Promise<void>;
-  protected abstract createDomainObject(): DomainObject;
-}
-
-abstract class PlayerMapper extends Mapper {
-  protected abstract playerType: PlayerType;
-
-  constructor() {
-    super();
-  }
-
-  async load(domainObject: DomainObject, result: any) {
-    const player = domainObject as Player;
-    player.id = result.id;
-    player.name = result.name;
-  }
-}
-
-class FootballerMapper extends PlayerMapper {
-  protected playerType = PlayerType.Footballer;
-
-  protected findStatementSql = `SELECT * FROM players WHERE id = ? AND type = "${this.playerType}"`;
-
-  async find(id: number) {
-    return (await this.findAbstract(id)) as Footballer | null;
-  }
-
-  async load(domainObject: DomainObject, result: any) {
-    super.load(domainObject, result);
-    const footballer = domainObject as Footballer;
-    footballer.club = result.club;
-  }
-
-  protected createDomainObject(): DomainObject {
-    return new Footballer(Footballer.NO_ID, '', '');
-  }
-}
-
-class CricketerMapper extends PlayerMapper {
-  protected playerType = PlayerType.Cricketer;
-
-  protected findStatementSql = 'SELECT * FROM players WHERE id = ? AND type = "cricketer"';
-
-  async find(id: number) {
-    return (await this.findAbstract(id)) as Footballer | null;
-  }
-
-  async load(domainObject: DomainObject, result: any) {
-    super.load(domainObject, result);
-    const cricketer = domainObject as Cricketer;
-    cricketer.battingAverage = result.batting_average;
-  }
-
-  protected createDomainObject(): DomainObject {
-    return new Cricketer(Cricketer.NO_ID, '', -1);
-  }
-}
+import { FootballerMapper, CricketerMapper, BowlerMapper } from './mappers';
+import { Footballer, Cricketer, Bowler } from './models';
 
 describe('FootballerMapper', () => {
   before(async () => {
@@ -117,6 +14,16 @@ describe('FootballerMapper', () => {
     assert.deepStrictEqual(await footballerMapper.find(999), null);
     const footballer = await footballerMapper.find(1);
     assert.deepStrictEqual(footballer, new Footballer(1, 'Messi', 'Inter Miami CF'));
+  });
+
+  it('should update', async () => {
+    const footballerMapper = new FootballerMapper();
+    const footballer = await footballerMapper.find(1);
+    footballer!.name = 'Messi Cuccittini';
+    footballer!.club = 'Cruzeiro';
+    await footballerMapper.update(footballer!);
+    const updated = await footballerMapper.find(1);
+    assert.deepStrictEqual(updated, new Footballer(1, 'Messi Cuccittini', 'Cruzeiro'));
   });
 });
 
@@ -131,6 +38,16 @@ describe('CricketerMapper', () => {
     const cricketer = await cricketerMapper.find(2);
     assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
   });
+
+  it('should update', async () => {
+    const cricketerMapper = new CricketerMapper();
+    const cricketer = await cricketerMapper.find(2);
+    cricketer!.name = 'Andrew Symonds A.';
+    cricketer!.battingAverage = 12;
+    await cricketerMapper.update(cricketer!);
+    const updated = await cricketerMapper.find(2);
+    assert.deepStrictEqual(updated, new Cricketer(2, 'Andrew Symonds A.', 12));
+  });
 });
 
 describe('BowlerMapper', () => {
@@ -139,9 +56,9 @@ describe('BowlerMapper', () => {
   });
 
   it('should find', async () => {
-    const bowlerMapper = new CricketerMapper();
+    const bowlerMapper = new BowlerMapper();
     assert.deepStrictEqual(await bowlerMapper.find(999), null);
-    const cricketer = await bowlerMapper.find(3);
-    assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
+    const bowler = await bowlerMapper.find(3);
+    assert.deepStrictEqual(bowler, new Bowler(3, 'Williamson', 30));
   });
 });

@@ -16,4 +16,4 @@ INSERT INTO players (name, type, batting_average)
   VALUES ('Andrew Symonds', 'cricketer', 10);
 
 INSERT INTO players (name, type, bowling_average)
-  VALUES ('Williamson', 'bowler', 10);
+  VALUES ('Williamson', 'bowler', 30);
