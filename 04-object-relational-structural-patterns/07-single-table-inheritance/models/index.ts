@@ -24,7 +24,7 @@ export class Footballer extends Player {
 
 export class Cricketer extends Player {
   constructor(id: number, name: string, public battingAverage: number) {
-    super(id, name, PlayerType.Footballer);
+    super(id, name, PlayerType.Cricketer);
   }
 }
 

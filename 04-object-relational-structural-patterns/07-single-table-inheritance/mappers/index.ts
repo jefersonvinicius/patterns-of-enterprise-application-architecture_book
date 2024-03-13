@@ -13,14 +13,26 @@ export abstract class Mapper {
     return domainObject;
   }
 
-  abstract update(domainObject: DomainObject): Promise<void>;
+  async update(domainObject: DomainObject): Promise<void> {
+    await this.save(domainObject);
+  }
 
-  protected abstract load(domainObject: DomainObject, result: any): Promise<void>;
+  insert(domainObject: DomainObject): Promise<DomainObject> {
+    return this.save(domainObject);
+  }
+
+  abstract delete(domainObject: DomainObject): Promise<void>;
+
+  protected async load(domainObject: DomainObject, result: any): Promise<void> {
+    domainObject.id = result.id;
+  }
+
+  protected abstract save(domainObject: DomainObject): Promise<DomainObject>;
 
   protected abstract createDomainObject(): DomainObject;
 }
 
-export abstract class PlayerMapper extends Mapper {
+export abstract class AbstractPlayerMapper extends Mapper {
   protected abstract playerType: PlayerType;
 
   constructor() {
@@ -28,9 +40,14 @@ export abstract class PlayerMapper extends Mapper {
   }
 
   async load(domainObject: DomainObject, result: any) {
+    super.load(domainObject, result);
     const player = domainObject as Player;
-    player.id = result.id;
     player.name = result.name;
+  }
+
+  async delete(domainObject: DomainObject): Promise<void> {
+    const sql = 'DELETE FROM players WHERE id = ?';
+    await database.instance().run(sql, domainObject.id);
   }
 
   mapperFor(domainObject: DomainObject): Mapper {
@@ -41,7 +58,7 @@ export abstract class PlayerMapper extends Mapper {
   }
 }
 
-export class FootballerMapper extends PlayerMapper {
+export class FootballerMapper extends AbstractPlayerMapper {
   protected playerType = PlayerType.Footballer;
 
   protected findStatementSql = `SELECT * FROM players WHERE id = ? AND type = "${this.playerType}"`;
@@ -56,10 +73,17 @@ export class FootballerMapper extends PlayerMapper {
     footballer.club = result.club;
   }
 
-  async update(domainObject: DomainObject): Promise<void> {
+  protected async save(domainObject: DomainObject): Promise<DomainObject> {
     assert.ok(domainObject instanceof Footballer);
-    const sql = 'UPDATE players SET name = ?, club = ? WHERE id = ?';
-    await database.instance().run(sql, domainObject.name, domainObject.club, domainObject.id);
+    if (domainObject.id === DomainObject.NO_ID) {
+      const sql = 'INSERT INTO players (name, club, type) VALUES (?, ?, ?)';
+      const result = await database.instance().run(sql, domainObject.name, domainObject.club, domainObject.type);
+      domainObject.id = result.lastID!;
+    } else {
+      const sql = 'UPDATE players SET name = ?, club = ? WHERE id = ?';
+      await database.instance().run(sql, domainObject.name, domainObject.club, domainObject.id);
+    }
+    return domainObject;
   }
 
   protected createDomainObject(): DomainObject {
@@ -67,7 +91,7 @@ export class FootballerMapper extends PlayerMapper {
   }
 }
 
-export class CricketerMapper extends PlayerMapper {
+export class CricketerMapper extends AbstractPlayerMapper {
   protected playerType = PlayerType.Cricketer;
 
   protected findStatementSql = 'SELECT * FROM players WHERE id = ? AND type = "cricketer"';
@@ -82,10 +106,19 @@ export class CricketerMapper extends PlayerMapper {
     cricketer.battingAverage = result.batting_average;
   }
 
-  async update(domainObject: DomainObject): Promise<void> {
+  protected async save(domainObject: DomainObject): Promise<DomainObject> {
     assert.ok(domainObject instanceof Cricketer);
-    const sql = 'UPDATE players SET name = ?, batting_average = ? WHERE id = ?';
-    await database.instance().run(sql, domainObject.name, domainObject.battingAverage, domainObject.id);
+    if (domainObject.id === DomainObject.NO_ID) {
+      const sql = 'INSERT INTO players (name, batting_average, type) VALUES (?, ?, ?)';
+      const result = await database
+        .instance()
+        .run(sql, domainObject.name, domainObject.battingAverage, domainObject.type);
+      domainObject.id = result.lastID!;
+    } else {
+      const sql = 'UPDATE players SET name = ?, batting_average = ? WHERE id = ?';
+      await database.instance().run(sql, domainObject.name, domainObject.battingAverage, domainObject.id);
+    }
+    return domainObject;
   }
 
   protected createDomainObject(): DomainObject {
@@ -93,7 +126,7 @@ export class CricketerMapper extends PlayerMapper {
   }
 }
 
-export class BowlerMapper extends PlayerMapper {
+export class BowlerMapper extends AbstractPlayerMapper {
   protected playerType = PlayerType.Bowler;
 
   protected findStatementSql = 'SELECT * FROM players WHERE id = ? AND type = "bowler"';
