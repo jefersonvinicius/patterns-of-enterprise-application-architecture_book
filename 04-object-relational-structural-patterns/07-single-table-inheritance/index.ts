@@ -116,10 +116,10 @@ describe('BowlerMapper', () => {
 
   it('should delete', async () => {
     const bowlerMapper = new BowlerMapper();
-    const found = await bowlerMapper.find(2);
+    const found = await bowlerMapper.find(3);
     assert.ok(found instanceof Bowler);
     await bowlerMapper.delete(found);
-    const deleted = await bowlerMapper.find(2);
+    const deleted = await bowlerMapper.find(3);
     assert.deepStrictEqual(deleted, null);
   });
 });

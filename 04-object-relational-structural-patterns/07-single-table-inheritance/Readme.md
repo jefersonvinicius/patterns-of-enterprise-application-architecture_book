@@ -1,0 +1,1 @@
+To map database to domain classes is used only one table to represent all subclasses.

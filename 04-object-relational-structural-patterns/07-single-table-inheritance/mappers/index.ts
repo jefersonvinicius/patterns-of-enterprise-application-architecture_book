@@ -147,6 +147,20 @@ export class BowlerMapper extends AbstractPlayerMapper {
     await database.instance().run(sql, domainObject.name, domainObject.bowlingAverage, domainObject.id);
   }
 
+  protected async save(domainObject: DomainObject): Promise<DomainObject> {
+    assert.ok(domainObject instanceof Bowler);
+    if (domainObject.id === DomainObject.NO_ID) {
+      const sql = 'INSERT INTO players (name, bowling_average, type) VALUES (?, ?, ?)';
+      const result = await database
+        .instance()
+        .run(sql, domainObject.name, domainObject.bowlingAverage, domainObject.type);
+      domainObject.id = result.lastID!;
+    } else {
+      await this.update(domainObject);
+    }
+    return domainObject;
+  }
+
   protected createDomainObject(): DomainObject {
     return new Bowler(Bowler.NO_ID, '', -1);
   }
