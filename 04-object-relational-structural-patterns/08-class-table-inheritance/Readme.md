@@ -1,0 +1,1 @@
+One table is used for each subclass to map the database to domain classes.
