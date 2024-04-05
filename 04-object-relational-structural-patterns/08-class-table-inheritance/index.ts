@@ -82,99 +82,99 @@ describe('FootballerMapper', () => {
     const created = await footballerMapper.insert(footballer);
     assert.strictEqual(created.id, 4);
     const footballerCreated = await footballerMapper.find(created.id);
-    assert.deepStrictEqual(footballerCreated, new Footballer(2, 'Any', 'Any Club'));
+    assert.deepStrictEqual(footballerCreated, new Footballer(4, 'Any', 'Any Club'));
   });
 
-  // it('should delete', async () => {
-  //   const footballerMapper = new FootballerMapper();
-  //   const footballer = await footballerMapper.find(2);
-  //   assert.ok(footballer);
-  //   await footballerMapper.delete(footballer);
-  //   const deleted = await footballerMapper.find(2);
-  //   assert.deepStrictEqual(deleted, null);
-  // });
+  it('should delete', async () => {
+    const footballerMapper = new FootballerMapper();
+    const footballer = await footballerMapper.find(4);
+    assert.ok(footballer);
+    await footballerMapper.delete(footballer);
+    const deleted = await footballerMapper.find(4);
+    assert.deepStrictEqual(deleted, null);
+  });
 });
 
-// describe('CricketerMapper', () => {
-//   before(async () => {
-//     await database.start();
-//   });
+describe('CricketerMapper', () => {
+  before(async () => {
+    await database.start();
+  });
 
-//   it('should find', async () => {
-//     const cricketerMapper = new CricketerMapper();
-//     assert.deepStrictEqual(await cricketerMapper.find(999), null);
-//     const cricketer = await cricketerMapper.find(2);
-//     assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
-//   });
+  it('should find', async () => {
+    const cricketerMapper = new CricketerMapper();
+    assert.deepStrictEqual(await cricketerMapper.find(999), null);
+    const cricketer = await cricketerMapper.find(2);
+    assert.deepStrictEqual(cricketer, new Cricketer(2, 'Andrew Symonds', 10));
+  });
 
-//   it('should update', async () => {
-//     const cricketerMapper = new CricketerMapper();
-//     const cricketer = await cricketerMapper.find(2);
-//     assert.ok(cricketer);
-//     cricketer.name = 'Andrew Symonds A.';
-//     cricketer.battingAverage = 20;
-//     await cricketerMapper.update(cricketer);
-//     const updatedCricketer = await cricketerMapper.find(2);
-//     assert.deepStrictEqual(updatedCricketer, new Cricketer(2, 'Andrew Symonds A.', 20));
-//   });
+  it('should update', async () => {
+    const cricketerMapper = new CricketerMapper();
+    const cricketer = await cricketerMapper.find(2);
+    assert.ok(cricketer);
+    cricketer.name = 'Andrew Symonds A.';
+    cricketer.battingAverage = 20;
+    await cricketerMapper.update(cricketer);
+    const updatedCricketer = await cricketerMapper.find(2);
+    assert.deepStrictEqual(updatedCricketer, new Cricketer(2, 'Andrew Symonds A.', 20));
+  });
 
-//   it('should insert', async () => {
-//     const cricketerMapper = new CricketerMapper();
-//     const cricketer = new Cricketer(Cricketer.NO_ID, 'Any cricketer', 100);
-//     const created = await cricketerMapper.insert(cricketer);
-//     assert.strictEqual(created.id, 3);
-//     const cricketerCreated = await cricketerMapper.find(created.id);
-//     assert.deepStrictEqual(cricketerCreated, new Cricketer(3, 'Any cricketer', 100));
-//   });
+  it('should insert', async () => {
+    const cricketerMapper = new CricketerMapper();
+    const cricketer = new Cricketer(Cricketer.NO_ID, 'Any cricketer', 100);
+    const created = await cricketerMapper.insert(cricketer);
+    assert.strictEqual(created.id, 4);
+    const cricketerCreated = await cricketerMapper.find(created.id);
+    assert.deepStrictEqual(cricketerCreated, new Cricketer(4, 'Any cricketer', 100));
+  });
 
-//   it('should delete', async () => {
-//     const cricketerMapper = new CricketerMapper();
-//     const cricketer = await cricketerMapper.find(2);
-//     assert.ok(cricketer);
-//     await cricketerMapper.delete(cricketer);
-//     const deleted = await cricketerMapper.find(2);
-//     assert.deepStrictEqual(deleted, null);
-//   });
-// });
+  it('should delete', async () => {
+    const cricketerMapper = new CricketerMapper();
+    const cricketer = await cricketerMapper.find(2);
+    assert.ok(cricketer);
+    await cricketerMapper.delete(cricketer);
+    const deleted = await cricketerMapper.find(2);
+    assert.deepStrictEqual(deleted, null);
+  });
+});
 
-// describe('BowlerMapper', () => {
-//   before(async () => {
-//     await database.start();
-//   });
+describe('BowlerMapper', () => {
+  before(async () => {
+    await database.start();
+  });
 
-//   it('should find', async () => {
-//     const bowlerMapper = new BowlerMapper();
-//     assert.deepStrictEqual(await bowlerMapper.find(999), null);
-//     const bowler = await bowlerMapper.find(3);
-//     assert.deepStrictEqual(bowler, new Bowler(3, 'Williamson', 30));
-//   });
+  it('should find', async () => {
+    const bowlerMapper = new BowlerMapper();
+    assert.deepStrictEqual(await bowlerMapper.find(999), null);
+    const bowler = await bowlerMapper.find(3);
+    assert.deepStrictEqual(bowler, new Bowler(3, 'Williamson', 30));
+  });
 
-//   it('should update', async () => {
-//     const bowlerMapper = new BowlerMapper();
-//     const bowler = await bowlerMapper.find(3);
-//     assert.ok(bowler);
-//     bowler.name = 'Williamson B.b';
-//     bowler.bowlerAverage = 20;
-//     await bowlerMapper.update(bowler);
-//     const updated = await bowlerMapper.find(3);
-//     assert.deepStrictEqual(updated, new Bowler(3, 'Williamson B.b', 20));
-//   });
+  it('should update', async () => {
+    const bowlerMapper = new BowlerMapper();
+    const bowler = await bowlerMapper.find(3);
+    assert.ok(bowler);
+    bowler.name = 'Williamson B.b';
+    bowler.bowlerAverage = 20;
+    await bowlerMapper.update(bowler);
+    const updated = await bowlerMapper.find(3);
+    assert.deepStrictEqual(updated, new Bowler(3, 'Williamson B.b', 20));
+  });
 
-//   it('should insert', async () => {
-//     const bowlerMapper = new BowlerMapper();
-//     const bowler = new Bowler(Bowler.NO_ID, 'Any bowler', 90);
-//     const created = await bowlerMapper.insert(bowler);
-//     assert.strictEqual(created.id, 4);
-//     const bowlerCreated = await bowlerMapper.find(created.id);
-//     assert.deepStrictEqual(bowlerCreated, new Bowler(4, 'Any bowler', 90));
-//   });
+  it('should insert', async () => {
+    const bowlerMapper = new BowlerMapper();
+    const bowler = new Bowler(Bowler.NO_ID, 'Any bowler', 90);
+    const created = await bowlerMapper.insert(bowler);
+    assert.strictEqual(created.id, 4);
+    const bowlerCreated = await bowlerMapper.find(created.id);
+    assert.deepStrictEqual(bowlerCreated, new Bowler(4, 'Any bowler', 90));
+  });
 
-//   it('should delete', async () => {
-//     const bowlerMapper = new BowlerMapper();
-//     const bowler = await bowlerMapper.find(3);
-//     assert.ok(bowler);
-//     await bowlerMapper.delete(bowler);
-//     const deleted = await bowlerMapper.find(3);
-//     assert.deepStrictEqual(deleted, null);
-//   });
-// });
+  it('should delete', async () => {
+    const bowlerMapper = new BowlerMapper();
+    const bowler = await bowlerMapper.find(3);
+    assert.ok(bowler);
+    await bowlerMapper.delete(bowler);
+    const deleted = await bowlerMapper.find(3);
+    assert.deepStrictEqual(deleted, null);
+  });
+});

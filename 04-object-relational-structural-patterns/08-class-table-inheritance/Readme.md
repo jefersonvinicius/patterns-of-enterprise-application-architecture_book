@@ -1,1 +1,1 @@
-One table is used for each subclass to map the database to domain classes.
+In class table inheritance, one table represents the root class hierarchy, and the others represent each concrete table. The problem with this approach is that you need to access two tables to access an entity.
