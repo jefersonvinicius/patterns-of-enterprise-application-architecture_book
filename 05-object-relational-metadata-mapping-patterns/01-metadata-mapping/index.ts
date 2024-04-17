@@ -33,6 +33,14 @@ class DataMap {
   get updateList() {
     return this.columnMaps.map((column) => `${column.columnName} = ?`).join(', ');
   }
+
+  get insertList() {
+    return this.columnMaps.map((column) => column.columnName).join(', ');
+  }
+
+  get insertValuesList() {
+    return this.columnMaps.map(() => '?').join(', ');
+  }
 }
 
 abstract class Mapper {
@@ -45,6 +53,7 @@ abstract class Mapper {
   protected async findObject(id: number) {
     const sql = `SELECT ${this.dataMap.columnList} FROM ${this.dataMap.tableName} WHERE id = ?`;
     const dbResult = await database.instance().get(sql, id);
+    if (!dbResult) return null;
     const result = this.load(dbResult);
     return result;
   }
@@ -53,6 +62,13 @@ abstract class Mapper {
     const sql = `UPDATE ${this.dataMap.tableName} SET ${this.dataMap.updateList} WHERE id = ?`;
     const params = this.dataMap.columns.map((column) => domainObject[column.fieldName]);
     await database.instance().run(sql, ...params, domainObject.id);
+  }
+
+  async insert(domainObject: DomainObject) {
+    const sql = `INSERT INTO ${this.dataMap.tableName} (${this.dataMap.insertList}) VALUES (${this.dataMap.insertValuesList})`;
+    const values = this.dataMap.columns.map((column) => domainObject[column.fieldName]);
+    const result = await database.instance().run(sql, ...values);
+    domainObject.id = result.lastID!;
   }
 
   private load(result: any) {
@@ -140,5 +156,20 @@ describe('PersonMapper', () => {
         numberOfDependents: 4,
       })
     );
+  });
+
+  it('should insert a person', async () => {
+    const mapper = new PersonMapper();
+    const person = Person.create({
+      id: Person.NO_ID,
+      firstName: 'Novo',
+      lastName: 'Santos',
+      numberOfDependents: 10,
+    });
+    assert.deepStrictEqual(person.id, Person.NO_ID);
+    await mapper.insert(person);
+    assert.deepStrictEqual(person.id, 6);
+    const found = await mapper.find(6);
+    assert.deepStrictEqual(person, found);
   });
 });
