@@ -1,0 +1,1 @@
+Query objects provide a straightforward and reusable approach to querying databases.

@@ -1,0 +1,1 @@
+A repository acts as an interface between your domain application and the data source (e.g., database, files, network). The implementation can be provided by query objects, mappers, and other approaches.

@@ -1,0 +1,1 @@
+Metadata provides a way to map a database to application models. Common methods for managing metadata include using decorators or configuration files (such as XML or JSON).
