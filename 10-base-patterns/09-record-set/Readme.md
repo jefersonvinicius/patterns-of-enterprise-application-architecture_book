@@ -1,0 +1,1 @@
+A record set is a memory representation of relational data. It is typically used with a UI tool that is compatible with a record set (e.g., ADO.NET).
