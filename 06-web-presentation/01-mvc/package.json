@@ -1,0 +1,16 @@
+{
+  "name": "01-mvc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/express": "^4.17.21",
+    "tsx": "^4.9.3",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "handlebars": "^4.7.8"
+  }
+}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Situation</title>
+</head>
+<body>
+  {{#if student}}
+    <h2>{{student.name}}</h2>
+    <p>Grade: {{student.grade}}</p>
+    <p>Situation: {{#if student.isAcceptedOnExam }} <span>Approved</span> {{else}} <span>Disapproved</span> {{/if}} </p>
+  {{else}}
+    <span>Student not found!</span>
+  {{/if}}
+</body>
+</html>
