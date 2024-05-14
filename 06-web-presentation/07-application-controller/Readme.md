@@ -1,0 +1,1 @@
+The application controller is useful when you have different views based on the context of an entity. In this case, the controller will use the correct command for the required entity.
