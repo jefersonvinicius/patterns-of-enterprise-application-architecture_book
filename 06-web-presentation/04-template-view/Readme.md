@@ -1,0 +1,1 @@
+A template view is the pattern of using a markup language (e.g., HTML) and embedded code that is replaced by the language (e.g., PHP, Ruby, etc.) to generate a final version of a view.
