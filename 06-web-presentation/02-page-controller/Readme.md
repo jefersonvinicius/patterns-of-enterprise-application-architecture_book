@@ -1,0 +1,1 @@
+Each endpoint or action in the system is handled by a controller.
