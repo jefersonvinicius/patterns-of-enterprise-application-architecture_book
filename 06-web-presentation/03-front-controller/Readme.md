@@ -1,0 +1,1 @@
+The front controller is a controller that receives all requests and manages to redirect them to the right command/action of the system. The front controller can handle request configurations such as internationalization.
