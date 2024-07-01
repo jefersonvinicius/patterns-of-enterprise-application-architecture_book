@@ -1,0 +1,1 @@
+The two-step view pattern involves first creating a representation of the app's view and then rendering the view itself. This approach makes it easier to update styles globally.
