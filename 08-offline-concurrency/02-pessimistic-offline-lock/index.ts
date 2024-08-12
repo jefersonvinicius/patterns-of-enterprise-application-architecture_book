@@ -26,6 +26,7 @@ export class ExclusiveReadLockManagerDB implements ExclusiveReadLockManager {
   private readonly INSERT_SQL = 'INSERT INTO lock (lockableId, ownerId) VALUES (?, ?)';
   private readonly CHECK_SQL = 'SELECT lockableId FROM lock WHERE lockableId = ? AND ownerId = ?';
   private readonly DELETE_SQL = 'DELETE FROM lock WHERE lockableId = ? AND ownerId = ?';
+  private readonly DELETE_ALL_SQL = 'DELETE FROM lock WHERE ownerId = ?';
 
   async acquireLock(lockable: number, owner: string): Promise<void> {
     if (await this.hasLock(lockable, owner)) {
@@ -38,16 +39,21 @@ export class ExclusiveReadLockManagerDB implements ExclusiveReadLockManager {
     await database.instance().run(this.DELETE_SQL, lockable, owner);
   }
 
-  releaseAllLock(owner: string): Promise<void> {
-    throw new Error('Method not implemented.');
+  async releaseAllLock(owner: string): Promise<void> {
+    await database.instance().run(this.DELETE_ALL_SQL, owner);
   }
 
   private async hasLock(lockable: number, owner: string) {
     const row = await database.instance().get(this.CHECK_SQL, lockable, owner);
-    console.log({ row });
     return !!row;
   }
 }
+
+class AppSession {
+  constructor(readonly id: string, readonly user: string) {}
+}
+
+class AppSessionManager {}
 
 describe('ExclusiveReadLockManagerDB', () => {
   beforeEach(async () => {
@@ -83,6 +89,19 @@ describe('ExclusiveReadLockManagerDB', () => {
     await assert.rejects(lockedAttempt, new Error('Concurrency error, resource 1 locked by jeferson'));
 
     await sut.releaseLock(1, 'jeferson');
+    await sut.acquireLock(1, 'jeferson');
+    assert(1);
+  });
+
+  it('should release all', async () => {
+    const sut = new ExclusiveReadLockManagerDB();
+
+    await sut.acquireLock(2, 'jeferson');
+    await sut.acquireLock(1, 'jeferson');
+
+    await sut.releaseAllLock('jeferson');
+
+    await sut.acquireLock(2, 'jeferson');
     await sut.acquireLock(1, 'jeferson');
     assert(1);
   });
