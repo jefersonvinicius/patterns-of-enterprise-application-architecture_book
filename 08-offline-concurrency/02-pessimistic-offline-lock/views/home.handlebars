@@ -1,0 +1,17 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Home</title>
+  </head>
+  <body>
+    <h1>Hello {{username}}</h1>
+    <ul>
+      {{#each customers}}
+        <li>
+          <a href='/edit/{{this.id}}'>{{this.name}}</a>
+        </li>
+      {{/each}}
+    </ul>
+  </body>
+</html>

@@ -1,59 +1,7 @@
 import { beforeEach, describe, it } from 'node:test';
 import database from './infra/database';
 import assert from 'node:assert';
-
-class Plugins {
-  protected static plugins = new Map<string, any>();
-
-  static getPlugin<T>(Class: new () => T) {
-    const plugin = this.plugins.get(Class.name);
-    if (!plugin) throw new Error(`Plugin ${Class.name} does not exist`);
-    return plugin;
-  }
-
-  static addPlugin(instance: object) {
-    this.plugins.set(instance.constructor.name, instance);
-  }
-}
-
-export interface ExclusiveReadLockManager {
-  acquireLock(lockable: number, owner: string): Promise<void>;
-  releaseLock(lockable: number, owner: string): Promise<void>;
-  releaseAllLock(owner: string): Promise<void>;
-}
-
-export class ExclusiveReadLockManagerDB implements ExclusiveReadLockManager {
-  private readonly INSERT_SQL = 'INSERT INTO lock (lockableId, ownerId) VALUES (?, ?)';
-  private readonly CHECK_SQL = 'SELECT lockableId FROM lock WHERE lockableId = ? AND ownerId = ?';
-  private readonly DELETE_SQL = 'DELETE FROM lock WHERE lockableId = ? AND ownerId = ?';
-  private readonly DELETE_ALL_SQL = 'DELETE FROM lock WHERE ownerId = ?';
-
-  async acquireLock(lockable: number, owner: string): Promise<void> {
-    if (await this.hasLock(lockable, owner)) {
-      throw new Error(`Concurrency error, resource ${lockable} locked by ${owner}`);
-    }
-    await database.instance().run(this.INSERT_SQL, lockable, owner);
-  }
-
-  async releaseLock(lockable: number, owner: string): Promise<void> {
-    await database.instance().run(this.DELETE_SQL, lockable, owner);
-  }
-
-  async releaseAllLock(owner: string): Promise<void> {
-    await database.instance().run(this.DELETE_ALL_SQL, owner);
-  }
-
-  private async hasLock(lockable: number, owner: string) {
-    const row = await database.instance().get(this.CHECK_SQL, lockable, owner);
-    return !!row;
-  }
-}
-
-class AppSession {
-  constructor(readonly id: string, readonly user: string) {}
-}
-
-class AppSessionManager {}
+import { ExclusiveReadLockManagerDB } from './locking';
 
 describe('ExclusiveReadLockManagerDB', () => {
   beforeEach(async () => {

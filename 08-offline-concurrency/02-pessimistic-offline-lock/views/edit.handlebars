@@ -1,0 +1,13 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Edition</title>
+  </head>
+  <body>
+    <form method='POST' action='/edit/{{customer.id}}'>
+      <input type='text' value='{{customer.name}}' name='name' />
+      <button>Save</button>
+    </form>
+  </body>
+</html>
