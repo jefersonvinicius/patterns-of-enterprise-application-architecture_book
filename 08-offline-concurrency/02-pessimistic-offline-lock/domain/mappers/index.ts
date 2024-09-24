@@ -13,6 +13,23 @@ export class CustomerMapper {
     return rows.map(this.mapToModel);
   }
 
+  async update(customer: Customer) {
+    const sql =
+      'UPDATE customers SET modified = ?, modifiedBy = ?, version = ?, name = ?, createdBy = ?, created = ? WHERE id = ?';
+    await database
+      .instance()
+      .run(
+        sql,
+        customer.modified,
+        customer.modifiedBy,
+        customer.version,
+        customer.name,
+        customer.createdBy,
+        customer.created,
+        customer.id
+      );
+  }
+
   private mapToModel(row: any) {
     return new Customer(
       row.id,

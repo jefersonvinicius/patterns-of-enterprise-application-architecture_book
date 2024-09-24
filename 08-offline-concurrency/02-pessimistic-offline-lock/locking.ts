@@ -2,7 +2,7 @@ import database from './infra/database';
 
 export interface IExclusiveReadLockManager {
   acquireLock(lockable: number | string, owner: string): Promise<void>;
-  releaseLock(lockable: number, owner: string): Promise<void>;
+  releaseLock(lockable: number | string, owner: string): Promise<void>;
   releaseAllLock(owner: string): Promise<void>;
 }
 
@@ -30,7 +30,6 @@ export class ExclusiveReadLockManagerDB implements IExclusiveReadLockManager {
 
   private async hasLock(lockable: number, owner: string) {
     const row = await database.instance().get(this.CHECK_SQL, lockable, owner);
-    console.log({ row });
     return !!row;
   }
 }

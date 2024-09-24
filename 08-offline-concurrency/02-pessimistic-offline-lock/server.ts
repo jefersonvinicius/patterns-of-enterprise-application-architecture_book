@@ -54,7 +54,6 @@ declare module 'express-session' {
 const SECRET = 'secred';
 
 const app = express();
-// app.use(cookies(SECRET));
 app.use(
   session({
     secret: SECRET,
@@ -150,7 +149,12 @@ class EditCustomerCommand extends BusinessTransactionCommand {
   async process(): Promise<void> {
     await this.startNewBusinessTransaction();
     const { id } = this.request.params;
-    await ExclusiveReadLockManager.getInstance().acquireLock(id, this.appSessionManager.getSession()?.user!);
+    try {
+      await ExclusiveReadLockManager.getInstance().acquireLock(id, this.appSessionManager.getSession()?.user!);
+    } catch (error) {
+      console.log(error);
+      return this.response.render('locked', { resource: 'customer', id });
+    }
     const customer = await customerMapper.find(Number(id));
     if (!customer) {
       return this.response.render('404');
@@ -163,16 +167,30 @@ class SaveCustomerCommand extends BusinessTransactionCommand {
   async process(): Promise<void> {
     await this.startNewBusinessTransaction();
     const { id } = this.request.params;
-    try {
-      await ExclusiveReadLockManager.getInstance().acquireLock(id, this.appSessionManager.getSession()?.user!);
-    } catch (error) {
-      return this.response.render('locked', { resource: 'customer', id });
-    }
+    const { name } = this.request.body;
+    await ExclusiveReadLockManager.getInstance().releaseLock(id, this.appSessionManager.getSession()?.user!);
+
     const customer = await customerMapper.find(Number(id));
-    if (!customer) {
-      return this.response.render('404');
-    }
-    return this.response.render('customer-saved', { customer });
+    if (!customer) return this.response.render('404');
+
+    customer.name = name;
+    await customerMapper.update(customer);
+    return this.response.redirect('/customer_saved');
+  }
+}
+
+class ViewHomeCommand extends BusinessTransactionCommand {
+  async process(): Promise<void> {
+    await this.startNewBusinessTransaction();
+    const customers = await customerMapper.list();
+    return this.response.render('home', { username: this.request.session.username, customers });
+  }
+}
+
+class ViewCustomerSavedCommand extends BusinessTransactionCommand {
+  async process(): Promise<void> {
+    await this.startNewBusinessTransaction();
+    return this.response.render('customer-saved');
   }
 }
 
@@ -190,20 +208,18 @@ function view(viewName: string) {
 const controller = new Controller();
 controller.addCommand('edit', EditCustomerCommand);
 controller.addCommand('save', SaveCustomerCommand);
+controller.addCommand('home', ViewHomeCommand);
+controller.addCommand('customerSaved', ViewCustomerSavedCommand);
 
 app.get('/edit/:id', secureRoute, controller.handle('edit'));
 app.post('/edit/:id', secureRoute, controller.handle('save'));
+app.get('/home', secureRoute, controller.handle('home'));
+app.get('/customer_saved', secureRoute, controller.handle('customerSaved'));
 
 app.post('/login', (request, response) => {
   request.session.username = request.body.username;
   return response.redirect('/home');
 });
-
-app.get('/home', secureRoute, async (request, response) => {
-  const customers = await customerMapper.list();
-  return response.render('home', { username: request.session.username, customers });
-});
-
 app.get('/login', view('login'));
 
 async function bootstrap() {
