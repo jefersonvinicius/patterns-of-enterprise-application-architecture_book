@@ -211,6 +211,10 @@ controller.addCommand('save', SaveCustomerCommand);
 controller.addCommand('home', ViewHomeCommand);
 controller.addCommand('customerSaved', ViewCustomerSavedCommand);
 
+app.use((_, response, next) => {
+  response.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+  next();
+});
 app.get('/edit/:id', secureRoute, controller.handle('edit'));
 app.post('/edit/:id', secureRoute, controller.handle('save'));
 app.get('/home', secureRoute, controller.handle('home'));
