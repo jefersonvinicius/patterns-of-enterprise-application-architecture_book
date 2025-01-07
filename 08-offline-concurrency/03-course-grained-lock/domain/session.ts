@@ -9,6 +9,15 @@ class IdentityMap {
   putVersion(version: Version) {
     return this.versions.set(version.id, version);
   }
+
+  hasVersion(id: number) {
+    return this.versions.has(id);
+  }
+
+  // Testing purposes
+  clear() {
+    this.versions.clear();
+  }
 }
 
 export class AppSessionManager {

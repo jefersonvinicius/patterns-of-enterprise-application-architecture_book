@@ -43,6 +43,7 @@ export class Version {
     const result = await database.instance().run(Version.INSERT_SQL, this.value, this.modifiedBy, this.modifiedAt);
     if (result.lastID) {
       this._id = result.lastID;
+      AppSessionManager.identityMap.putVersion(this);
       return true;
     }
     return false;
