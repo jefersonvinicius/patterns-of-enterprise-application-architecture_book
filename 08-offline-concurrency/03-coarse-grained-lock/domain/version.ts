@@ -63,6 +63,15 @@ export class Version {
     this.locked = true;
   }
 
+  async delete() {
+    const params = [this.id, this.value];
+    const result = await database.instance().run(Version.UPDATE_SQL, ...params);
+
+    if (result.changes === 0) {
+      await this.throwConcurrencyException();
+    }
+  }
+
   private static async load(id: number) {
     const row = await database.instance().get(this.LOAD_SQL, id);
     if (!row) return null;

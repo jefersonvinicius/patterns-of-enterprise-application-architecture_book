@@ -53,7 +53,7 @@ describe('Version', () => {
     assert.strictEqual(version.value, 1);
   });
 
-  it('should throws concurrency error', async () => {
+  it('should throws concurrency error if try increment a changed version', async () => {
     const version = Version.create('jeferson');
     await version.insert();
     version.value = 40;
@@ -66,4 +66,20 @@ describe('Version', () => {
       }
     );
   });
+
+  it('should throws concurrency error if try delete a changed version', async () => {
+    const version = Version.create('jeferson');
+    await version.insert();
+    version.value = 40;
+    assert.rejects(
+      async () => {
+        await version.delete();
+      },
+      {
+        message: `Version modified by jeferson at ${version.modifiedAt}`,
+      }
+    );
+  });
+
+  it('should throws if try to delete object already being modified', async () => {});
 });
