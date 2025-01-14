@@ -1,6 +1,8 @@
 import { DomainObject } from '../domain/object';
 
-export class AbstractMapper {
+export abstract class AbstractMapper<T extends any> {
+  abstract find(id: number): Promise<T | null>;
+
   async insert(object: DomainObject) {
     await object.getVersion().insert();
   }

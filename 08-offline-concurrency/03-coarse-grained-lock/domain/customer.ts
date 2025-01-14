@@ -3,9 +3,7 @@ import { DomainObject } from './object';
 import { Version } from './version';
 
 export class Customer extends DomainObject {
-  private _addresses: Address[] = [];
-
-  constructor(id: number, version: Version, public name: string, public address: any[]) {
+  constructor(id: number, version: Version, public name: string, private _addresses: Address[] = []) {
     super(id, version);
   }
 
@@ -21,5 +19,9 @@ export class Customer extends DomainObject {
     const address = Address.create(this, this.getVersion(), line1, city, state);
     this._addresses.push(address);
     return address;
+  }
+
+  addAddressInstance(address: Address) {
+    this._addresses.push(address);
   }
 }

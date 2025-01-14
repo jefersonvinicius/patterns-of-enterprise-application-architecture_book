@@ -3,7 +3,16 @@ import { Version } from './domain/version';
 import assert from 'node:assert';
 import database from './infra/database';
 import { AppSessionManager } from './domain/session';
+import { Customer } from './domain/customer';
+import { MapperRegistry } from './mappers/registry';
+import { Address } from './domain/address';
+import { AddressMapper } from './mappers/address';
+import { CustomerMapper } from './mappers/customer';
 
+MapperRegistry.setMapper(Address, new AddressMapper());
+MapperRegistry.setMapper(Customer, new CustomerMapper());
+
+describe('TEst', () => {});
 describe('Version', () => {
   const date = new Date();
 
@@ -80,6 +89,55 @@ describe('Version', () => {
       }
     );
   });
+});
 
-  it('should throws if try to delete object already being modified', async () => {});
+describe('CustomerMapper', () => {
+  const customerDate = new Date();
+
+  it('should insert customer', async () => {
+    mock.timers.enable({ apis: ['Date'], now: customerDate });
+
+    const customer = Customer.create('Jeferson', 'admin');
+    customer.addAddress('Street 1', 'Whiterun', 'Dragonsearch');
+    customer.addAddress('Street 2', 'Solitute', 'Palace');
+    await MapperRegistry.getMapper(Customer).insert(customer);
+    const expectedCustomer = new Customer(
+      1,
+      new Version(6, 0, 'admin', customerDate.toISOString(), false),
+      'Jeferson',
+      []
+    );
+    expectedCustomer.addAddress('Street 1', 'Whiterun', 'Dragonsearch');
+    expectedCustomer.addAddress('Street 2', 'Solitute', 'Palace');
+    expectedCustomer.addresses[0].id = 1;
+    expectedCustomer.addresses[1].id = 2;
+    assert.deepStrictEqual(customer, expectedCustomer);
+
+    mock.timers.reset();
+  });
+
+  it('should find customer', async () => {
+    const customer = await MapperRegistry.getMapper(Customer).find(1);
+    const expectedCustomer = new Customer(
+      1,
+      new Version(6, 0, 'admin', customerDate.toISOString(), false),
+      'Jeferson',
+      []
+    );
+    expectedCustomer.addAddress('Street 1', 'Whiterun', 'Dragonsearch');
+    expectedCustomer.addAddress('Street 2', 'Solitute', 'Palace');
+    expectedCustomer.addresses[0].id = 1;
+    expectedCustomer.addresses[1].id = 2;
+    assert.deepStrictEqual(customer, expectedCustomer);
+  });
+
+  // TODO
+  it('should insert customer', async () => {
+    const date = new Date();
+    mock.timers.enable({ apis: ['Date'], now: date });
+
+    const customer = await MapperRegistry.getMapper(Customer).find(1);
+
+    mock.timers.reset();
+  });
 });
