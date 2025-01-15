@@ -1,5 +1,6 @@
 import { Address } from '../domain/address';
 import { Customer } from '../domain/customer';
+import { DomainObject } from '../domain/object';
 import { Version } from '../domain/version';
 import database from '../infra/database';
 import { AbstractMapper } from './mapper';
@@ -49,5 +50,25 @@ export class CustomerMapper extends AbstractMapper<Customer> {
     }
     await super.delete(object);
     await object.getVersion().delete();
+  }
+
+  async update(object: Customer): Promise<void> {
+    const params = [object.name, object.getVersion().id, object.id];
+    await database.instance().run(
+      `
+      UPDATE customers
+      SET name = ?, version_id = ?
+      WHERE id = ?  
+    `,
+      params
+    );
+    for await (const address of object.addresses) {
+      if (address.id === Address.NO_ID) {
+        await MapperRegistry.getMapper(Address).insert(address);
+      } else {
+        await MapperRegistry.getMapper(Address).update(address);
+      }
+    }
+    await super.update(object);
   }
 }

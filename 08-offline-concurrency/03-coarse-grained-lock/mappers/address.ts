@@ -23,5 +23,16 @@ export class AddressMapper extends AbstractMapper<Address> {
     object.id = result.lastID!;
   }
 
-  async update(object: DomainObject): Promise<void> {}
+  async update(object: Address): Promise<void> {
+    if (object.id === Address.NO_ID) throw new Error('Trying update a customer not inserted yet');
+    await super.update(object);
+    const params = [object.line1, object.city, object.state, object.customer.id, object.getVersion().id, object.id];
+    await database.instance().run(
+      ` 
+      UPDATE addresses 
+      SET line1 = ?, city = ?, state = ?, customer_id = ?, version_id = ?
+      WHERE id = ?`,
+      ...params
+    );
+  }
 }

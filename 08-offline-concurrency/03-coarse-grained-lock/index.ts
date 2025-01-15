@@ -12,7 +12,6 @@ import { CustomerMapper } from './mappers/customer';
 MapperRegistry.setMapper(Address, new AddressMapper());
 MapperRegistry.setMapper(Customer, new CustomerMapper());
 
-describe('TEst', () => {});
 describe('Version', () => {
   const date = new Date();
 
@@ -131,12 +130,34 @@ describe('CustomerMapper', () => {
     assert.deepStrictEqual(customer, expectedCustomer);
   });
 
-  // TODO
-  it('should insert customer', async () => {
+  it('should update customer', async () => {
     const date = new Date();
     mock.timers.enable({ apis: ['Date'], now: date });
 
     const customer = await MapperRegistry.getMapper(Customer).find(1);
+    assert.ok(customer);
+    customer.name = 'Other name';
+    customer.addresses[0].line1 = 'Street 4';
+    customer.addresses[0].state = 'Other state';
+    customer.addAddress('New line 1', 'New city', 'New state');
+    await MapperRegistry.getMapper(Customer).update(customer);
+
+    const customerUpdated = await MapperRegistry.getMapper(Customer).find(1);
+
+    const expectedCustomer = new Customer(
+      1,
+      new Version(6, 1, 'admin', customerDate.toISOString(), true),
+      'Other name',
+      []
+    );
+    expectedCustomer.addAddress('Street 4', 'Whiterun', 'Other state');
+    expectedCustomer.addAddress('Street 2', 'Solitute', 'Palace');
+    expectedCustomer.addAddress('New line 1', 'New city', 'New state');
+    expectedCustomer.addresses[0].id = 1;
+    expectedCustomer.addresses[1].id = 2;
+    expectedCustomer.addresses[2].id = 3;
+
+    assert.deepStrictEqual(customerUpdated, expectedCustomer);
 
     mock.timers.reset();
   });
