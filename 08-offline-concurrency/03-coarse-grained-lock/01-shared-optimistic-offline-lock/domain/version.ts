@@ -13,7 +13,7 @@ export class Version {
   ) {}
 
   static UPDATE_SQL = 'UPDATE versions SET value = ?, modifiedBy = ?, modifiedAt = ? WHERE id = ? AND value = ?';
-  static DELETE_SQL = 'DELETE versions WHERE id = ? AND value = ?';
+  static DELETE_SQL = 'DELETE FROM versions WHERE id = ? AND value = ?';
   static INSERT_SQL = 'INSERT INTO versions (value, modifiedBy, modifiedAt) VALUES (?, ?, ?)';
   static LOAD_SQL = 'SELECT * FROM versions WHERE id = ?';
 
@@ -65,7 +65,7 @@ export class Version {
 
   async delete() {
     const params = [this.id, this.value];
-    const result = await database.instance().run(Version.UPDATE_SQL, ...params);
+    const result = await database.instance().run(Version.DELETE_SQL, ...params);
 
     if (result.changes === 0) {
       await this.throwConcurrencyException();
@@ -82,6 +82,9 @@ export class Version {
 
   private async throwConcurrencyException() {
     const currentVersion = await Version.load(this.id);
-    throw new Error(`Version modified by ${currentVersion?.modifiedBy} at ${currentVersion?.modifiedAt}`);
+    const message = currentVersion
+      ? `Version modified by ${currentVersion?.modifiedBy} at ${currentVersion?.modifiedAt}`
+      : 'Version probably was deleted';
+    throw new Error(message);
   }
 }

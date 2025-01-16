@@ -12,12 +12,12 @@ import { CustomerMapper } from './mappers/customer';
 MapperRegistry.setMapper(Address, new AddressMapper());
 MapperRegistry.setMapper(Customer, new CustomerMapper());
 
+before(async () => {
+  await database.start();
+});
+
 describe('Version', () => {
   const date = new Date();
-
-  before(async () => {
-    await database.start();
-  });
 
   it('should insert version', async () => {
     mock.timers.enable({ apis: ['Date'], now: date });
@@ -65,7 +65,7 @@ describe('Version', () => {
     const version = Version.create('jeferson');
     await version.insert();
     version.value = 40;
-    assert.rejects(
+    await assert.rejects(
       async () => {
         await version.increment();
       },
@@ -158,6 +158,57 @@ describe('CustomerMapper', () => {
     expectedCustomer.addresses[2].id = 3;
 
     assert.deepStrictEqual(customerUpdated, expectedCustomer);
+
+    mock.timers.reset();
+  });
+
+  it('should throws if try update customer already updated', async () => {
+    const date = new Date();
+    mock.timers.enable({ apis: ['Date'], now: date });
+
+    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    const customer = await MapperRegistry.getMapper(Customer).find(1);
+    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    const customer2 = await MapperRegistry.getMapper(Customer).find(1);
+    assert.ok(customer);
+    assert.ok(customer2);
+    assert.ok(customer.getVersion() !== customer2.getVersion());
+
+    customer.name = 'Other name';
+    await MapperRegistry.getMapper(Customer).update(customer);
+
+    customer2.name = 'Change';
+    await assert.rejects(
+      async () => {
+        await MapperRegistry.getMapper(Customer).update(customer2);
+      },
+      { message: `Version modified by admin at ${customerDate.toISOString()}` }
+    );
+
+    mock.timers.reset();
+  });
+
+  it('should throws if try update deleted customer', async () => {
+    const date = new Date();
+    mock.timers.enable({ apis: ['Date'], now: date });
+
+    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    const customer = await MapperRegistry.getMapper(Customer).find(1);
+    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    const customer2 = await MapperRegistry.getMapper(Customer).find(1);
+    assert.ok(customer);
+    assert.ok(customer2);
+    assert.ok(customer.getVersion() !== customer2.getVersion());
+
+    await MapperRegistry.getMapper(Customer).delete(customer);
+
+    customer2.name = 'Change';
+    await assert.rejects(
+      async () => {
+        await MapperRegistry.getMapper(Customer).update(customer2);
+      },
+      { message: 'Version probably was deleted' }
+    );
 
     mock.timers.reset();
   });

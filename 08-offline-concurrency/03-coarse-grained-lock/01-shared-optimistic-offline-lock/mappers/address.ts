@@ -8,7 +8,10 @@ export class AddressMapper extends AbstractMapper<Address> {
     throw new Error('Method not implemented.');
   }
 
-  async delete(object: DomainObject): Promise<void> {}
+  async delete(object: DomainObject): Promise<void> {
+    await super.delete(object);
+    await database.instance().run(`DELETE FROM addresses WHERE id = ?`, object.id);
+  }
 
   async insert(object: Address): Promise<void> {
     if (object.id !== Address.NO_ID) throw new Error('Inserting an already inserted address');

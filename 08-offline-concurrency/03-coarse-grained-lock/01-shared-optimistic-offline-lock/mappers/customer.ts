@@ -53,6 +53,7 @@ export class CustomerMapper extends AbstractMapper<Customer> {
   }
 
   async update(object: Customer): Promise<void> {
+    await super.update(object);
     const params = [object.name, object.getVersion().id, object.id];
     await database.instance().run(
       `
@@ -69,6 +70,5 @@ export class CustomerMapper extends AbstractMapper<Customer> {
         await MapperRegistry.getMapper(Address).update(address);
       }
     }
-    await super.update(object);
   }
 }
