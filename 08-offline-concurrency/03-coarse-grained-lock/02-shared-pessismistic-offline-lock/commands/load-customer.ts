@@ -8,6 +8,7 @@ export class LoadCustomerCommand {
     const customerMapper = MapperRegistry.getMapper(Customer);
     const customer = await customerMapper.find(customerId);
     if (customer) {
+      await customer.getVersion().increment();
       await ExclusiveReadLockManager.getInstance().acquireLock(customer.id, AppSessionManager.session.id);
     }
     return customer;

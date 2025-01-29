@@ -43,4 +43,9 @@ export class AppSessionManager {
     }
     return this._session;
   }
+
+  static clear() {
+    this._identityMap?.clear();
+    this._session = null;
+  }
 }

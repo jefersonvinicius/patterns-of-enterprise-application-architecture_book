@@ -1,3 +1,8 @@
+CREATE TABLE lock (
+  lockableId INTEGER PRIMARY KEY,
+  ownerId VARCHAR(1000)
+);
+
 CREATE TABLE versions(
   id INTEGER PRIMARY KEY,
   value INTEGER,

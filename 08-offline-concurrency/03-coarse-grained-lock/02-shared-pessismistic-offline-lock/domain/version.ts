@@ -72,6 +72,10 @@ export class Version {
     }
   }
 
+  clone() {
+    return new Version(this.id, this.value, this.modifiedBy, this.modifiedAt, this.locked);
+  }
+
   private static async load(id: number) {
     const row = await database.instance().get(this.LOAD_SQL, id);
     if (!row) return null;

@@ -9,6 +9,7 @@ import { Address } from './domain/address';
 import { AddressMapper } from './mappers/address';
 import { CustomerMapper } from './mappers/customer';
 import { LoadCustomerCommand } from './commands/load-customer';
+import { ExclusiveReadLockManager, ExclusiveReadLockManagerDB } from './locking';
 
 MapperRegistry.setMapper(Address, new AddressMapper());
 MapperRegistry.setMapper(Customer, new CustomerMapper());
@@ -193,9 +194,9 @@ describe('CustomerMapper', () => {
     const date = new Date();
     mock.timers.enable({ apis: ['Date'], now: date });
 
-    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    AppSessionManager.clear(); // Simulate another session
     const customer = await MapperRegistry.getMapper(Customer).find(1);
-    AppSessionManager.identityMap.clear(); // To simulate access from different sessions and avoid use the same version instance to both customers
+    AppSessionManager.clear(); // Simulate another session
     const customer2 = await MapperRegistry.getMapper(Customer).find(1);
     assert.ok(customer);
     assert.ok(customer2);
@@ -215,13 +216,14 @@ describe('CustomerMapper', () => {
   });
 });
 
+const isoPattern = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/;
+
 describe('LoadCustomerCommand', () => {
-  let customer: Customer;
+  const customer = Customer.create('Jeferson', 'admin');
+  customer.addAddress('Street 1', 'Whiterun', 'Dragonsearch');
+  customer.addAddress('Street 2', 'Solitute', 'Palace');
 
   before(async () => {
-    customer = Customer.create('Jeferson', 'admin');
-    customer.addAddress('Street 1', 'Whiterun', 'Dragonsearch');
-    customer.addAddress('Street 2', 'Solitute', 'Palace');
     await MapperRegistry.getMapper(Customer).insert(customer);
   });
 
@@ -229,5 +231,35 @@ describe('LoadCustomerCommand', () => {
     const loadCustomerCommand = new LoadCustomerCommand();
     const loadedCustomer = await loadCustomerCommand.execute(customer.id);
     assert.deepStrictEqual(customer, loadedCustomer);
+  });
+
+  it('should lock customer', async () => {
+    await ExclusiveReadLockManager.getInstance().releaseAllLock(AppSessionManager.session.id);
+    const loadCustomerCommand = new LoadCustomerCommand();
+    const loadedCustomer = await loadCustomerCommand.execute(customer.id);
+    assert.deepStrictEqual(customer, loadedCustomer);
+    await assert.rejects(loadCustomerCommand.execute(customer.id), {
+      message: `Concurrency error, resource 2 locked by ${AppSessionManager.session.id}`,
+    });
+  });
+
+  it('should ensure the loaded customer is the lasted', async () => {
+    await ExclusiveReadLockManager.getInstance().releaseAllLock(AppSessionManager.session.id);
+    AppSessionManager.clear(); // Simulate another session
+
+    const outdatedCustomer = await MapperRegistry.getMapper(Customer).find(customer.id);
+    assert.ok(outdatedCustomer);
+    const outdatedVersion = outdatedCustomer?.getVersion().clone();
+    outdatedCustomer.name = 'Other name';
+    await MapperRegistry.getMapper(Customer).update(outdatedCustomer);
+
+    AppSessionManager.identityMap.putVersion(outdatedVersion); // Forces customer use the old version object to throws error
+    assert.notStrictEqual(outdatedVersion.value, outdatedCustomer.getVersion().value);
+
+    const loadCustomerCommand = new LoadCustomerCommand();
+    await assert.rejects(
+      loadCustomerCommand.execute(customer.id),
+      new RegExp(`Version modified by admin at ${isoPattern.source}`)
+    );
   });
 });
