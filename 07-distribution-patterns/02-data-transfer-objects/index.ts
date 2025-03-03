@@ -45,8 +45,23 @@ class AlbumAssembler {
     for (const track of tracks) {
       const dto = new TrackDTO();
       dto.title = track.title;
+      this.writePerformers(dto, track);
+      trackDTOs.push(dto);
     }
+    result.tracks = trackDTOs;
+  }
+
+  private writePerformers(result: TrackDTO, track: Track) {
+    const performers: string[] = [];
+    for (const artist of track.artists) {
+      performers.push(artist.name);
+    }
+    result.performers = performers;
   }
 }
 
+const albumAssembler = new AlbumAssembler();
+
 console.log(deadClubCity);
+console.log(albumAssembler.writeDTO(deadClubCity));
+console.log(JSON.stringify(albumAssembler.writeDTO(deadClubCity), null, 4));
